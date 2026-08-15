@@ -137,13 +137,13 @@
   .team-score{font-size:clamp(42px,9vw,64px);line-height:1;margin:6px 0 16px;}
   .team-panel.a .team-score{color:var(--teamA);}
   .team-panel.b .team-score{color:var(--teamB);}
-  .eliminate-btn{
+  .win-btn{
     width:100%;padding:12px 8px;border-radius:10px;font-weight:700;font-size:13px;
     color:#fff;letter-spacing:.02em;
   }
-  .team-panel.a .eliminate-btn{background:var(--teamA-dim);border:1px solid var(--teamA);}
-  .team-panel.b .eliminate-btn{background:var(--teamB-dim);border:1px solid var(--teamB);}
-  .eliminate-btn:disabled{opacity:.35;cursor:not-allowed;}
+  .team-panel.a .win-btn{background:var(--teamA-dim);border:1px solid var(--teamA);}
+  .team-panel.b .win-btn{background:var(--teamB-dim);border:1px solid var(--teamB);}
+  .win-btn:disabled{opacity:.35;cursor:not-allowed;}
 
   .set-timer-wrap{
     display:flex;flex-direction:column;align-items:center;
@@ -331,7 +331,7 @@
       <div class="team-panel a">
         <div class="team-name" id="team-a-name-display">Aチーム</div>
         <div class="team-score num" id="score-a">0</div>
-        <button class="eliminate-btn" id="btn-a-out" disabled>Aチーム 全滅</button>
+        <button class="win-btn" id="btn-a-win" disabled>WIN</button>
       </div>
 
       <div class="set-timer-wrap">
@@ -352,7 +352,7 @@
       <div class="team-panel b">
         <div class="team-name" id="team-b-name-display">Bチーム</div>
         <div class="team-score num" id="score-b">0</div>
-        <button class="eliminate-btn" id="btn-b-out" disabled>Bチーム 全滅</button>
+        <button class="win-btn" id="btn-b-win" disabled>WIN</button>
       </div>
     </main>
 
@@ -495,8 +495,6 @@
 
     document.getElementById("team-a-name-display").textContent = state.teamAName;
     document.getElementById("team-b-name-display").textContent = state.teamBName;
-    document.getElementById("btn-a-out").textContent = state.teamAName+" 全滅";
-    document.getElementById("btn-b-out").textContent = state.teamBName+" 全滅";
 
     state.gameRemainingMs = state.gameDurationMs;
     state.setRemainingMs = 0;
@@ -561,8 +559,8 @@
 
     document.getElementById("start-set-btn").textContent = "セット進行中";
     document.getElementById("start-set-btn").disabled = true;
-    document.getElementById("btn-a-out").disabled = false;
-    document.getElementById("btn-b-out").disabled = false;
+    document.getElementById("btn-a-win").disabled = false;
+    document.getElementById("btn-b-win").disabled = false;
     document.getElementById("draw-btn").disabled = false;
     clickTone();
   }
@@ -580,8 +578,8 @@
     const elapsed = state.setTotalMs - Math.max(state.setRemainingMs,0);
 
     let resultText = "";
-    if(result==="A"){ state.scoreB += 2; resultText = state.teamAName+" 全滅 → "+state.teamBName+" 勝ち"; }
-    else if(result==="B"){ state.scoreA += 2; resultText = state.teamBName+" 全滅 → "+state.teamAName+" 勝ち"; }
+    if(result==="A"){ state.scoreA += 2; resultText = state.teamAName+" WIN"; }
+    else if(result==="B"){ state.scoreB += 2; resultText = state.teamBName+" WIN"; }
     else { state.scoreA += 1; state.scoreB += 1; resultText = "引き分け"; }
 
     state.history.push({
@@ -591,8 +589,8 @@
     renderHistory();
     renderScores();
 
-    document.getElementById("btn-a-out").disabled = true;
-    document.getElementById("btn-b-out").disabled = true;
+    document.getElementById("btn-a-win").disabled = true;
+    document.getElementById("btn-b-win").disabled = true;
     document.getElementById("draw-btn").disabled = true;
     document.getElementById("set-label").classList.remove("final","awaiting");
 
@@ -675,8 +673,8 @@
     if(!state.halfStarted){ startHalf(); return; }
     startSet();
   });
-  document.getElementById("btn-a-out").addEventListener("click", ()=> endSet("A"));
-  document.getElementById("btn-b-out").addEventListener("click", ()=> endSet("B"));
+  document.getElementById("btn-a-win").addEventListener("click", ()=> endSet("A"));
+  document.getElementById("btn-b-win").addEventListener("click", ()=> endSet("B"));
   document.getElementById("draw-btn").addEventListener("click", ()=> endSet("DRAW"));
 
   document.getElementById("next-half-btn").addEventListener("click", ()=>{
@@ -726,7 +724,7 @@
       state.awaitingDecision = true;
       buzzSetEnd();
       const label = document.getElementById("set-label");
-      label.textContent = "判定を選んでください(全滅 or 引き分け)";
+      label.textContent = "判定を選んでください(WIN or 引き分け)";
       label.classList.add("awaiting");
     } else {
       document.getElementById("set-time-display").textContent = fmt(state.setRemainingMs);
