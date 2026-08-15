@@ -110,7 +110,7 @@
     font-size:12px;color:var(--ink-dim);letter-spacing:.14em;font-weight:700;margin-bottom:2px;
   }
   .game-clock-big{
-    font-size:clamp(56px,13vw,104px);line-height:1;color:var(--gold-soft);
+    font-size:clamp(76px,18vw,168px);line-height:1;color:var(--gold-soft);
   }
   .game-clock-big.warn{color:var(--danger);}
   .icon-btn{
@@ -153,14 +153,14 @@
     font-size:13px;font-weight:700;color:var(--gold-soft);letter-spacing:.08em;margin-bottom:10px;
   }
   .set-label.final{color:var(--danger);}
-  .ring-box{position:relative;width:min(220px,60vw);height:min(220px,60vw);}
+  .ring-box{position:relative;width:min(300px,72vw);height:min(300px,72vw);}
   .ring-box svg{width:100%;height:100%;transform:rotate(-90deg);}
   .ring-bg{fill:none;stroke:#233A56;stroke-width:10;}
   .ring-fg{fill:none;stroke:var(--gold);stroke-width:10;stroke-linecap:round;transition:stroke-dashoffset .1s linear, stroke .2s;}
   .ring-fg.danger{stroke:var(--danger);}
   .set-time{
     position:absolute;inset:0;display:flex;align-items:center;justify-content:center;
-    font-size:clamp(38px,9vw,52px);
+    font-size:clamp(52px,14vw,88px);
   }
   .set-controls{margin-top:16px;display:flex;flex-direction:column;align-items:center;gap:8px;width:100%;}
   #start-set-btn{
@@ -171,22 +171,16 @@
   .link-btn{background:none;color:var(--ink-dim);font-size:12px;text-decoration:underline;padding:4px;}
   .link-btn:disabled{opacity:.3;text-decoration:none;cursor:not-allowed;}
 
-  .history{
-    max-width:720px;margin:0 auto;width:100%;padding:0 20px 12px;
-  }
-  .history h3{
-    font-size:12px;color:var(--ink-dim);letter-spacing:.08em;font-weight:700;margin:0 0 8px;
-  }
   #history-list{
-    list-style:none;margin:0;padding:0;max-height:110px;overflow-y:auto;
-    display:flex;flex-direction:column-reverse;gap:6px;
+    list-style:none;margin:0;padding:0;max-height:52vh;overflow-y:auto;
+    display:flex;flex-direction:column-reverse;gap:6px;text-align:left;
   }
   #history-list li{
     display:flex;justify-content:space-between;gap:10px;
-    background:var(--bg-panel);border-radius:8px;padding:8px 12px;font-size:12.5px;color:var(--ink-dim);
+    background:var(--bg-panel-2);border-radius:8px;padding:9px 12px;font-size:13px;color:var(--ink-dim);
   }
   #history-list li b{color:var(--ink);font-weight:700;}
-  #history-list:empty::before{content:"まだセットが行われていません";font-size:12px;color:var(--ink-dim);}
+  #history-list:empty::before{content:"まだセットが行われていません";font-size:13px;color:var(--ink-dim);}
 
   .controls-bar{
     display:flex;gap:10px;justify-content:center;padding:14px 20px 24px;flex-wrap:wrap;
@@ -211,6 +205,8 @@
   .overlay-card h2{margin:0 0 10px;font-size:19px;}
   .overlay-card p{color:var(--ink-dim);font-size:13px;margin:0 0 20px;line-height:1.6;}
   .overlay-actions{display:flex;gap:10px;justify-content:center;flex-wrap:wrap;}
+  .overlay-card.wide{max-width:520px;width:100%;text-align:left;}
+  .overlay-card.wide h2{text-align:center;}
 
   @media (max-width:520px){
     .board{gap:14px;}
@@ -355,12 +351,8 @@
       </div>
     </main>
 
-    <section class="history">
-      <h3>セット履歴</h3>
-      <ul id="history-list"></ul>
-    </section>
-
     <footer class="controls-bar">
+      <button class="ctrl-btn" id="history-open-btn">セット履歴を見る</button>
       <button class="ctrl-btn gold" id="next-half-btn" disabled>後半へ進む</button>
       <button class="ctrl-btn" id="reset-btn">試合をリセット</button>
     </footer>
@@ -376,6 +368,17 @@
     <div class="overlay-actions">
       <button class="ctrl-btn" id="overlay-cancel">キャンセル</button>
       <button class="ctrl-btn gold" id="overlay-ok">OK</button>
+    </div>
+  </div>
+</div>
+
+<!-- History overlay -->
+<div class="overlay" id="history-overlay">
+  <div class="overlay-card wide">
+    <h2>セット履歴</h2>
+    <ul id="history-list"></ul>
+    <div class="overlay-actions" style="margin-top:16px;">
+      <button class="ctrl-btn gold" id="history-close-btn">閉じる</button>
     </div>
   </div>
 </div>
@@ -399,8 +402,8 @@
     scoreA:0, scoreB:0,
     history:[],
 
-    gameRemainingMs:0, gameRunning:false, gameEndAt:0,
-    setRemainingMs:0, setRunning:false, setEndAt:0, setTotalMs:0, setIsFinal:false,
+    gameRemainingMs:0, gameEndAt:0,
+    setRemainingMs:0, running:false, setEndAt:0, setTotalMs:0, setIsFinal:false,
     setActive:false, // a set is currently in progress (running or paused, not yet resolved)
     halfStarted:false,
     halfFinished:false,
@@ -454,6 +457,13 @@
   document.getElementById("overlay-ok").addEventListener("click", ()=>{
     const fn = state.pendingAction; hideOverlay();
     if(fn) fn();
+  });
+
+  document.getElementById("history-open-btn").addEventListener("click", ()=>{
+    document.getElementById("history-overlay").classList.add("active");
+  });
+  document.getElementById("history-close-btn").addEventListener("click", ()=>{
+    document.getElementById("history-overlay").classList.remove("active");
   });
 
   // ---------- Setup screen ----------
@@ -517,8 +527,6 @@
   function startHalf(){
     state.halfStarted = true;
     state.halfFinished = false;
-    state.gameRunning = true;
-    state.gameEndAt = Date.now() + state.gameRemainingMs;
     document.getElementById("start-set-btn").textContent = "セット開始";
     document.getElementById("start-set-btn").disabled = false;
     document.getElementById("set-label").textContent = "セット待機中";
@@ -535,9 +543,11 @@
     state.setTotalMs = duration;
     state.setRemainingMs = duration;
     state.setIsFinal = isFinal;
-    state.setRunning = true;
     state.setActive = true;
-    state.setEndAt = Date.now() + duration;
+    state.running = true;
+    const now = Date.now();
+    state.setEndAt = now + duration;
+    state.gameEndAt = now + state.gameRemainingMs; // resume game clock together with the set
 
     const label = document.getElementById("set-label");
     label.textContent = (isFinal? "最終セット":"セット "+state.setNumber) + "  (" + fmt(duration) + ")";
@@ -553,8 +563,13 @@
 
   function endSet(result){
     if(!state.setActive) return;
+    if(state.running){
+      const now = Date.now();
+      state.gameRemainingMs = Math.max(state.gameEndAt - now, 0);
+      state.setRemainingMs = Math.max(state.setEndAt - now, 0);
+    }
     state.setActive = false;
-    state.setRunning = false;
+    state.running = false;
     const elapsed = state.setTotalMs - Math.max(state.setRemainingMs,0);
 
     let resultText = "";
@@ -586,7 +601,7 @@
   }
 
   function finishHalf(){
-    state.gameRunning = false;
+    state.running = false;
     state.halfFinished = true;
     document.getElementById("start-set-btn").disabled = true;
     if(!state.twoHalves){
@@ -669,50 +684,42 @@
 
   document.getElementById("pause-btn").addEventListener("click", ()=>{
     const btn = document.getElementById("pause-btn");
-    if(!state.halfStarted || state.halfFinished) return;
+    if(!state.setActive) return; // セット非進行中は一時停止の対象がない
     const now = Date.now();
-    if(state.gameRunning || state.setRunning){
-      // pause
-      if(state.gameRunning) state.gameRemainingMs = Math.max(state.gameEndAt-now,0);
-      if(state.setRunning) state.setRemainingMs = Math.max(state.setEndAt-now,0);
-      state.gameRunning = false; state.setRunning = state.setActive ? false : state.setRunning;
+    if(state.running){
+      state.gameRemainingMs = Math.max(state.gameEndAt-now,0);
+      state.setRemainingMs = Math.max(state.setEndAt-now,0);
+      state.running = false;
       btn.textContent = "▶";
     } else {
       state.gameEndAt = now + state.gameRemainingMs;
-      state.gameRunning = true;
-      if(state.setActive){ state.setEndAt = now + state.setRemainingMs; state.setRunning = true; }
+      state.setEndAt = now + state.setRemainingMs;
+      state.running = true;
       btn.textContent = "⏸";
     }
   });
 
   // ---------- Tick loop ----------
+  // ゲームタイムは、セットが進行している間だけ一緒に進む(セット間・待機中は止まったまま)
   setInterval(()=>{
+    if(!state.running) return;
     const now = Date.now();
 
-    if(state.gameRunning){
-      state.gameRemainingMs = state.gameEndAt - now;
-      if(state.gameRemainingMs <= 0){
-        state.gameRemainingMs = 0;
-        state.gameRunning = false;
-        if(!state.setActive){ finishHalf(); }
-      }
-      const gcd = document.getElementById("game-clock-display");
-      gcd.textContent = fmt(state.gameRemainingMs);
-      gcd.classList.toggle("warn", state.gameRemainingMs>0 && state.gameRemainingMs<=60000);
-    }
+    state.gameRemainingMs = Math.max(state.gameEndAt - now, 0);
+    const gcd = document.getElementById("game-clock-display");
+    gcd.textContent = fmt(state.gameRemainingMs);
+    gcd.classList.toggle("warn", state.gameRemainingMs>0 && state.gameRemainingMs<=60000);
 
-    if(state.setRunning){
-      state.setRemainingMs = state.setEndAt - now;
-      if(state.setRemainingMs <= 0){
-        state.setRemainingMs = 0;
-        document.getElementById("set-time-display").textContent = fmt(0);
-        renderRing(0);
-        buzzSetEnd();
-        endSet("DRAW");
-      } else {
-        document.getElementById("set-time-display").textContent = fmt(state.setRemainingMs);
-        renderRing(state.setRemainingMs/state.setTotalMs);
-      }
+    state.setRemainingMs = state.setEndAt - now;
+    if(state.setRemainingMs <= 0){
+      state.setRemainingMs = 0;
+      document.getElementById("set-time-display").textContent = fmt(0);
+      renderRing(0);
+      buzzSetEnd();
+      endSet("DRAW");
+    } else {
+      document.getElementById("set-time-display").textContent = fmt(state.setRemainingMs);
+      renderRing(state.setRemainingMs/state.setTotalMs);
     }
   }, 100);
 
