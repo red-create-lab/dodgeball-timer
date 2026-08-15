@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>クロスドッジボール タイマー</title>
+<title>Dodgeball Timer</title>
 <style>
   :root{
     --bg-deep:#0D1826;
@@ -104,13 +104,13 @@
     font-size:12px;font-weight:700;padding:5px 12px;border-radius:999px;letter-spacing:.06em;flex:none;
   }
   .game-clock-hero{
-    text-align:center;padding:18px 20px 6px;background:var(--bg-deep);
+    text-align:center;padding:10px 20px 4px;background:var(--bg-deep);
   }
   .game-clock-label{
     font-size:12px;color:var(--ink-dim);letter-spacing:.14em;font-weight:700;margin-bottom:2px;
   }
   .game-clock-big{
-    font-size:clamp(100px,24vw,240px);line-height:1;color:var(--gold-soft);
+    font-size:clamp(64px,16vw,140px);line-height:1;color:var(--gold-soft);
   }
   .game-clock-big.warn{color:var(--danger);}
   .icon-btn{
@@ -316,7 +316,7 @@
           <circle cx="12" cy="12" r="9" fill="none" stroke="#3E86C4" stroke-width="3"/>
           <circle cx="22" cy="22" r="9" fill="none" stroke="#C4553E" stroke-width="3"/>
         </svg>
-        <span class="brand-text">クロスドッジボール タイマー</span>
+        <span class="brand-text">Dodgeball Timer</span>
       </div>
       <div class="half-pill" id="half-label">前半</div>
       <button class="icon-btn" id="pause-btn" title="一時停止/再開">⏸</button>
@@ -358,6 +358,7 @@
 
     <footer class="controls-bar">
       <button class="ctrl-btn" id="history-open-btn">セット履歴を見る</button>
+      <button class="ctrl-btn" id="undo-btn" disabled>直前の判定を取り消す</button>
       <button class="ctrl-btn gold" id="next-half-btn" disabled>後半へ進む</button>
       <button class="ctrl-btn" id="reset-btn">試合をリセット</button>
     </footer>
@@ -411,6 +412,7 @@
     setRemainingMs:0, running:false, setEndAt:0, setTotalMs:0, setIsFinal:false,
     setActive:false, // a set is currently in progress (running or paused, not yet resolved)
     awaitingDecision:false, // set time hit 0, waiting for a result button
+    lastSnapshot:null, // for undoing the most recent set decision
     halfStarted:false,
     halfFinished:false,
     matchFinished:false,
@@ -542,6 +544,8 @@
   function startSet(){
     if(state.setActive) return;
     if(state.halfFinished || state.matchFinished) return;
+    state.lastSnapshot = null;
+    document.getElementById("undo-btn").disabled = true;
     const {duration, isFinal} = computeNextSetDuration();
     state.setNumber += 1;
     state.setTotalMs = duration;
@@ -572,6 +576,20 @@
       state.gameRemainingMs = Math.max(state.gameEndAt - now, 0);
       state.setRemainingMs = Math.max(state.setEndAt - now, 0);
     }
+
+    // 取り消し用にミューテーション前の状態を保存
+    state.lastSnapshot = {
+      scoreA: state.scoreA, scoreB: state.scoreB,
+      setNumber: state.setNumber, half: state.half,
+      halfFinished: state.halfFinished, matchFinished: state.matchFinished,
+      setIsFinal: state.setIsFinal, setTotalMs: state.setTotalMs,
+      gameRemainingMs: state.gameRemainingMs, setRemainingMs: state.setRemainingMs,
+      startBtnText: document.getElementById("start-set-btn").textContent,
+      halfLabelText: document.getElementById("half-label").textContent,
+      nextHalfDisplay: document.getElementById("next-half-btn").style.display,
+      nextHalfDisabled: document.getElementById("next-half-btn").disabled
+    };
+
     state.setActive = false;
     state.running = false;
     state.awaitingDecision = false;
@@ -593,6 +611,7 @@
     document.getElementById("btn-b-win").disabled = true;
     document.getElementById("draw-btn").disabled = true;
     document.getElementById("set-label").classList.remove("final","awaiting");
+    document.getElementById("undo-btn").disabled = false;
 
     if(state.setIsFinal){
       finishHalf();
@@ -635,6 +654,8 @@
   }
 
   function goToSecondHalf(){
+    state.lastSnapshot = null;
+    document.getElementById("undo-btn").disabled = true;
     state.half = 2;
     state.setNumber = 0;
     state.gameRemainingMs = state.gameDurationMs;
@@ -668,6 +689,55 @@
     });
   }
 
+  function undoLastDecision(){
+    const snap = state.lastSnapshot;
+    if(!snap) return;
+
+    state.history.pop();
+    renderHistory();
+
+    state.scoreA = snap.scoreA;
+    state.scoreB = snap.scoreB;
+    renderScores();
+
+    state.setNumber = snap.setNumber;
+    state.half = snap.half;
+    state.halfFinished = snap.halfFinished;
+    state.matchFinished = snap.matchFinished;
+    state.setIsFinal = snap.setIsFinal;
+    state.setTotalMs = snap.setTotalMs;
+    state.gameRemainingMs = snap.gameRemainingMs;
+    state.setRemainingMs = snap.setRemainingMs;
+
+    state.setActive = true;
+    state.running = false;
+    state.awaitingDecision = true;
+
+    document.getElementById("half-label").textContent = snap.halfLabelText;
+    document.getElementById("next-half-btn").style.display = snap.nextHalfDisplay;
+    document.getElementById("next-half-btn").disabled = snap.nextHalfDisabled;
+
+    document.getElementById("start-set-btn").textContent = snap.startBtnText;
+    document.getElementById("start-set-btn").disabled = true;
+
+    document.getElementById("game-clock-display").textContent = fmt(state.gameRemainingMs);
+    document.getElementById("game-clock-display").classList.toggle("warn", state.gameRemainingMs>0 && state.gameRemainingMs<=60000);
+    document.getElementById("set-time-display").textContent = fmt(state.setRemainingMs);
+    renderRing(state.setTotalMs>0 ? state.setRemainingMs/state.setTotalMs : 0);
+
+    document.getElementById("btn-a-win").disabled = false;
+    document.getElementById("btn-b-win").disabled = false;
+    document.getElementById("draw-btn").disabled = false;
+
+    const label = document.getElementById("set-label");
+    label.classList.remove("final");
+    label.classList.add("awaiting");
+    label.textContent = "取り消しました。判定を選び直してください";
+
+    state.lastSnapshot = null;
+    document.getElementById("undo-btn").disabled = true;
+  }
+
   // ---------- Button wiring ----------
   document.getElementById("start-set-btn").addEventListener("click", ()=>{
     if(!state.halfStarted){ startHalf(); return; }
@@ -676,6 +746,9 @@
   document.getElementById("btn-a-win").addEventListener("click", ()=> endSet("A"));
   document.getElementById("btn-b-win").addEventListener("click", ()=> endSet("B"));
   document.getElementById("draw-btn").addEventListener("click", ()=> endSet("DRAW"));
+  document.getElementById("undo-btn").addEventListener("click", ()=>{
+    showOverlay("直前の判定を取り消しますか？","スコアと履歴が1件分元に戻り、そのセットの判定をやり直せます。", undoLastDecision);
+  });
 
   document.getElementById("next-half-btn").addEventListener("click", ()=>{
     showOverlay("後半へ進みますか？","前半の結果は保持されたまま、ゲームタイムとセット数がリセットされます。", goToSecondHalf);
