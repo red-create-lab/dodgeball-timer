@@ -1,0 +1,722 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>クロスドッジボール タイマー</title>
+<style>
+  :root{
+    --bg-deep:#0D1826;
+    --bg-panel:#152740;
+    --bg-panel-2:#1B2F4B;
+    --navy:#1A2E44;
+    --gold:#C9A84C;
+    --gold-soft:#E4CD8B;
+    --teamA:#3E86C4;
+    --teamA-dim:#26445E;
+    --teamB:#C4553E;
+    --teamB-dim:#5E3226;
+    --ink:#F5F1E6;
+    --ink-dim:#8FA2B8;
+    --danger:#E2504C;
+    --success:#3FAE6A;
+    --radius:16px;
+  }
+  *{box-sizing:border-box;}
+  html,body{
+    margin:0;padding:0;height:100%;
+    background:var(--bg-deep);
+    color:var(--ink);
+    font-family:"Hiragino Sans","Hiragino Kaku Gothic ProN","Yu Gothic",-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
+    -webkit-font-smoothing:antialiased;
+    overflow-x:hidden;
+  }
+  .num{font-variant-numeric:tabular-nums;font-weight:800;letter-spacing:-0.02em;}
+  button{font-family:inherit;cursor:pointer;border:none;}
+  .screen{display:none;min-height:100dvh;}
+  .screen.active{display:flex;flex-direction:column;}
+
+  /* ---------- Setup Screen ---------- */
+  #setup-screen{align-items:center;justify-content:center;padding:32px 16px;}
+  .setup-card{
+    width:100%;max-width:560px;
+    background:var(--bg-panel);
+    border:1px solid #24405F;
+    border-radius:var(--radius);
+    padding:32px 28px 28px;
+  }
+  .setup-header{display:flex;align-items:center;gap:14px;margin-bottom:6px;}
+  .setup-title{font-size:22px;font-weight:800;letter-spacing:.02em;}
+  .setup-sub{color:var(--ink-dim);font-size:13px;margin:0 0 26px;padding-left:46px;}
+  .field-row{display:flex;gap:14px;margin-bottom:16px;}
+  .field{flex:1;}
+  .field label{
+    display:block;font-size:12px;color:var(--gold-soft);
+    letter-spacing:.05em;margin-bottom:6px;font-weight:700;
+  }
+  .field input[type=text],.field input[type=number]{
+    width:100%;background:var(--bg-panel-2);border:1px solid #2C4A6E;
+    color:var(--ink);border-radius:8px;padding:10px 12px;font-size:15px;
+  }
+  .mmss{display:flex;align-items:center;gap:6px;}
+  .mmss input{width:64px;text-align:center;}
+  .mmss span{color:var(--ink-dim);font-size:13px;}
+  .toggle-row{
+    display:flex;align-items:center;justify-content:space-between;
+    background:var(--bg-panel-2);border:1px solid #2C4A6E;border-radius:10px;
+    padding:12px 14px;margin-top:6px;margin-bottom:16px;
+  }
+  .toggle-label{font-size:13px;}
+  .toggle-label small{display:block;color:var(--ink-dim);font-size:11px;margin-top:2px;font-weight:400;}
+  .switch{position:relative;width:44px;height:24px;flex:none;}
+  .switch input{opacity:0;width:0;height:0;}
+  .slider{
+    position:absolute;inset:0;background:#3A4E68;border-radius:999px;
+    transition:.15s;cursor:pointer;
+  }
+  .slider:before{
+    content:"";position:absolute;width:18px;height:18px;left:3px;top:3px;
+    background:var(--ink);border-radius:50%;transition:.15s;
+  }
+  .switch input:checked + .slider{background:var(--gold);}
+  .switch input:checked + .slider:before{transform:translateX(20px);background:var(--bg-deep);}
+  .final-sub{display:flex;gap:10px;margin-bottom:16px;}
+  #final-sub-fields{display:flex;gap:10px;margin-bottom:16px;}
+  .primary-btn{
+    width:100%;background:var(--gold);color:#20140A;font-weight:800;
+    font-size:16px;padding:14px;border-radius:10px;margin-top:8px;
+    letter-spacing:.03em;
+  }
+  .primary-btn:active{transform:scale(.99);}
+
+  /* ---------- Main Screen ---------- */
+  #main-screen{background:var(--bg-deep);}
+  .topbar{
+    display:flex;align-items:center;gap:16px;
+    padding:14px 20px;background:var(--bg-panel);
+    border-bottom:2px solid var(--gold);
+  }
+  .brand{display:flex;align-items:center;gap:10px;font-weight:800;font-size:15px;letter-spacing:.02em;flex:1;min-width:0;}
+  .brand-mark{flex:none;}
+  .brand-text{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+  .half-pill{
+    background:var(--navy);border:1px solid var(--gold);color:var(--gold-soft);
+    font-size:12px;font-weight:700;padding:5px 12px;border-radius:999px;letter-spacing:.06em;flex:none;
+  }
+  .game-clock-hero{
+    text-align:center;padding:18px 20px 6px;background:var(--bg-deep);
+  }
+  .game-clock-label{
+    font-size:12px;color:var(--ink-dim);letter-spacing:.14em;font-weight:700;margin-bottom:2px;
+  }
+  .game-clock-big{
+    font-size:clamp(56px,13vw,104px);line-height:1;color:var(--gold-soft);
+  }
+  .game-clock-big.warn{color:var(--danger);}
+  .icon-btn{
+    background:var(--bg-panel-2);border:1px solid #2C4A6E;color:var(--ink);
+    width:38px;height:38px;border-radius:50%;font-size:15px;flex:none;
+    display:flex;align-items:center;justify-content:center;
+  }
+
+  .board{
+    flex:1;display:flex;align-items:center;justify-content:center;
+    gap:clamp(10px,4vw,48px);padding:20px 14px;flex-wrap:wrap;
+  }
+  .team-panel{
+    width:min(240px,38vw);min-width:150px;
+    background:var(--bg-panel);border-radius:var(--radius);
+    padding:20px 14px;text-align:center;border-bottom:5px solid transparent;
+  }
+  .team-panel.a{border-bottom-color:var(--teamA);}
+  .team-panel.b{border-bottom-color:var(--teamB);}
+  .team-name{
+    font-size:14px;font-weight:700;color:var(--ink-dim);
+    margin-bottom:4px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+  }
+  .team-score{font-size:clamp(42px,9vw,64px);line-height:1;margin:6px 0 16px;}
+  .team-panel.a .team-score{color:var(--teamA);}
+  .team-panel.b .team-score{color:var(--teamB);}
+  .eliminate-btn{
+    width:100%;padding:12px 8px;border-radius:10px;font-weight:700;font-size:13px;
+    color:#fff;letter-spacing:.02em;
+  }
+  .team-panel.a .eliminate-btn{background:var(--teamA-dim);border:1px solid var(--teamA);}
+  .team-panel.b .eliminate-btn{background:var(--teamB-dim);border:1px solid var(--teamB);}
+  .eliminate-btn:disabled{opacity:.35;cursor:not-allowed;}
+
+  .set-timer-wrap{
+    display:flex;flex-direction:column;align-items:center;
+    width:min(300px,90vw);
+  }
+  .set-label{
+    font-size:13px;font-weight:700;color:var(--gold-soft);letter-spacing:.08em;margin-bottom:10px;
+  }
+  .set-label.final{color:var(--danger);}
+  .ring-box{position:relative;width:min(220px,60vw);height:min(220px,60vw);}
+  .ring-box svg{width:100%;height:100%;transform:rotate(-90deg);}
+  .ring-bg{fill:none;stroke:#233A56;stroke-width:10;}
+  .ring-fg{fill:none;stroke:var(--gold);stroke-width:10;stroke-linecap:round;transition:stroke-dashoffset .1s linear, stroke .2s;}
+  .ring-fg.danger{stroke:var(--danger);}
+  .set-time{
+    position:absolute;inset:0;display:flex;align-items:center;justify-content:center;
+    font-size:clamp(38px,9vw,52px);
+  }
+  .set-controls{margin-top:16px;display:flex;flex-direction:column;align-items:center;gap:8px;width:100%;}
+  #start-set-btn{
+    width:100%;background:var(--success);color:#08210F;font-weight:800;
+    padding:14px;border-radius:10px;font-size:15px;
+  }
+  #start-set-btn:disabled{background:#2C4A6E;color:var(--ink-dim);}
+  .link-btn{background:none;color:var(--ink-dim);font-size:12px;text-decoration:underline;padding:4px;}
+  .link-btn:disabled{opacity:.3;text-decoration:none;cursor:not-allowed;}
+
+  .history{
+    max-width:720px;margin:0 auto;width:100%;padding:0 20px 12px;
+  }
+  .history h3{
+    font-size:12px;color:var(--ink-dim);letter-spacing:.08em;font-weight:700;margin:0 0 8px;
+  }
+  #history-list{
+    list-style:none;margin:0;padding:0;max-height:110px;overflow-y:auto;
+    display:flex;flex-direction:column-reverse;gap:6px;
+  }
+  #history-list li{
+    display:flex;justify-content:space-between;gap:10px;
+    background:var(--bg-panel);border-radius:8px;padding:8px 12px;font-size:12.5px;color:var(--ink-dim);
+  }
+  #history-list li b{color:var(--ink);font-weight:700;}
+  #history-list:empty::before{content:"まだセットが行われていません";font-size:12px;color:var(--ink-dim);}
+
+  .controls-bar{
+    display:flex;gap:10px;justify-content:center;padding:14px 20px 24px;flex-wrap:wrap;
+    border-top:1px solid #24405F;
+  }
+  .ctrl-btn{
+    background:var(--bg-panel-2);border:1px solid #2C4A6E;color:var(--ink);
+    padding:10px 18px;border-radius:9px;font-size:13px;font-weight:700;
+  }
+  .ctrl-btn.gold{background:var(--gold);color:#20140A;border-color:var(--gold);}
+  .ctrl-btn:disabled{opacity:.3;cursor:not-allowed;}
+
+  .overlay{
+    position:fixed;inset:0;background:rgba(10,16,26,.82);
+    display:none;align-items:center;justify-content:center;padding:20px;z-index:50;
+  }
+  .overlay.active{display:flex;}
+  .overlay-card{
+    background:var(--bg-panel);border:1px solid var(--gold);border-radius:var(--radius);
+    padding:26px;max-width:380px;text-align:center;
+  }
+  .overlay-card h2{margin:0 0 10px;font-size:19px;}
+  .overlay-card p{color:var(--ink-dim);font-size:13px;margin:0 0 20px;line-height:1.6;}
+  .overlay-actions{display:flex;gap:10px;justify-content:center;flex-wrap:wrap;}
+
+  @media (max-width:520px){
+    .board{gap:14px;}
+    .team-panel{order:2;}
+    .team-panel.a{order:1;}
+    .set-timer-wrap{order:0;width:100%;}
+  }
+</style>
+</head>
+<body>
+
+<div id="app">
+
+  <!-- ============= SETUP SCREEN ============= -->
+  <section id="setup-screen" class="screen active">
+    <div class="setup-card">
+      <div class="setup-header">
+        <svg width="34" height="34" viewBox="0 0 34 34">
+          <circle cx="12" cy="12" r="9" fill="none" stroke="#3E86C4" stroke-width="3"/>
+          <circle cx="22" cy="22" r="9" fill="none" stroke="#C4553E" stroke-width="3"/>
+        </svg>
+        <div class="setup-title">クロスドッジボール タイマー設定</div>
+      </div>
+      <p class="setup-sub">ゲームタイム(前後半)とセットタイムを二重管理する専用タイマーです</p>
+
+      <div class="field-row">
+        <div class="field">
+          <label>チームA 名称</label>
+          <input type="text" id="input-team-a" value="Aチーム">
+        </div>
+        <div class="field">
+          <label>チームB 名称</label>
+          <input type="text" id="input-team-b" value="Bチーム">
+        </div>
+      </div>
+
+      <div class="toggle-row">
+        <div class="toggle-label">
+          前後半に分ける
+          <small>OFFにすると、前後半なしの1ゲーム完結形式になります</small>
+        </div>
+        <label class="switch">
+          <input type="checkbox" id="two-halves-toggle" checked>
+          <span class="slider"></span>
+        </label>
+      </div>
+
+      <div class="field-row">
+        <div class="field">
+          <label id="game-duration-label">ゲームタイム(前後半それぞれ)</label>
+          <div class="mmss">
+            <input type="number" id="game-min" value="15" min="0" max="60"><span>分</span>
+            <input type="number" id="game-sec" value="0" min="0" max="59"><span>秒</span>
+          </div>
+        </div>
+        <div class="field">
+          <label>セットタイム(通常)</label>
+          <div class="mmss">
+            <input type="number" id="set-min" value="3" min="0" max="30"><span>分</span>
+            <input type="number" id="set-sec" value="0" min="0" max="59"><span>秒</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="toggle-row">
+        <div class="toggle-label">
+          最終セット短縮ルール
+          <small>残りゲームタイムが少ない場合、最終セットの長さを自動調整します</small>
+        </div>
+        <label class="switch">
+          <input type="checkbox" id="final-rule-toggle" checked>
+          <span class="slider"></span>
+        </label>
+      </div>
+
+      <div id="final-sub-fields">
+        <div class="field">
+          <label>短縮の閾値(残り時間)</label>
+          <div class="mmss">
+            <input type="number" id="final-threshold-min" value="1" min="0" max="30"><span>分</span>
+            <input type="number" id="final-threshold-sec" value="30" min="0" max="59"><span>秒</span>
+          </div>
+        </div>
+        <div class="field">
+          <label>短縮後のセット時間</label>
+          <div class="mmss">
+            <input type="number" id="final-short-min" value="1" min="0" max="30"><span>分</span>
+            <input type="number" id="final-short-sec" value="30" min="0" max="59"><span>秒</span>
+          </div>
+        </div>
+      </div>
+
+      <button class="primary-btn" id="confirm-setup-btn">この内容で試合を開始</button>
+    </div>
+  </section>
+
+  <!-- ============= MAIN SCREEN ============= -->
+  <section id="main-screen" class="screen">
+    <header class="topbar">
+      <div class="brand">
+        <svg class="brand-mark" width="24" height="24" viewBox="0 0 34 34">
+          <circle cx="12" cy="12" r="9" fill="none" stroke="#3E86C4" stroke-width="3"/>
+          <circle cx="22" cy="22" r="9" fill="none" stroke="#C4553E" stroke-width="3"/>
+        </svg>
+        <span class="brand-text">クロスドッジボール タイマー</span>
+      </div>
+      <div class="half-pill" id="half-label">前半</div>
+      <button class="icon-btn" id="pause-btn" title="一時停止/再開">⏸</button>
+    </header>
+
+    <div class="game-clock-hero">
+      <div class="game-clock-label">ゲームタイム</div>
+      <div class="game-clock-big num" id="game-clock-display">15:00</div>
+    </div>
+
+    <main class="board">
+      <div class="team-panel a">
+        <div class="team-name" id="team-a-name-display">Aチーム</div>
+        <div class="team-score num" id="score-a">0</div>
+        <button class="eliminate-btn" id="btn-a-out" disabled>Aチーム 全滅</button>
+      </div>
+
+      <div class="set-timer-wrap">
+        <div class="set-label" id="set-label">試合開始を待っています</div>
+        <div class="ring-box">
+          <svg viewBox="0 0 240 240">
+            <circle class="ring-bg" cx="120" cy="120" r="105"/>
+            <circle class="ring-fg" id="ring-fg" cx="120" cy="120" r="105" stroke-dasharray="659.7" stroke-dashoffset="0"/>
+          </svg>
+          <div class="set-time num" id="set-time-display">0:00</div>
+        </div>
+        <div class="set-controls">
+          <button id="start-set-btn">前半スタート</button>
+          <button class="link-btn" id="draw-btn" disabled>引き分けにする</button>
+        </div>
+      </div>
+
+      <div class="team-panel b">
+        <div class="team-name" id="team-b-name-display">Bチーム</div>
+        <div class="team-score num" id="score-b">0</div>
+        <button class="eliminate-btn" id="btn-b-out" disabled>Bチーム 全滅</button>
+      </div>
+    </main>
+
+    <section class="history">
+      <h3>セット履歴</h3>
+      <ul id="history-list"></ul>
+    </section>
+
+    <footer class="controls-bar">
+      <button class="ctrl-btn gold" id="next-half-btn" disabled>後半へ進む</button>
+      <button class="ctrl-btn" id="reset-btn">試合をリセット</button>
+    </footer>
+  </section>
+
+</div>
+
+<!-- Confirm overlay -->
+<div class="overlay" id="confirm-overlay">
+  <div class="overlay-card">
+    <h2 id="overlay-title">確認</h2>
+    <p id="overlay-text">よろしいですか?</p>
+    <div class="overlay-actions">
+      <button class="ctrl-btn" id="overlay-cancel">キャンセル</button>
+      <button class="ctrl-btn gold" id="overlay-ok">OK</button>
+    </div>
+  </div>
+</div>
+
+<script>
+(function(){
+  "use strict";
+
+  // ---------- State ----------
+  const state = {
+    teamAName:"Aチーム", teamBName:"Bチーム",
+    gameDurationMs:15*60*1000,
+    setDurationMs:3*60*1000,
+    finalRuleEnabled:true,
+    finalThresholdMs:90*1000,
+    finalShortMs:90*1000,
+    twoHalves:true,
+
+    half:1, // 1 or 2
+    setNumber:0,
+    scoreA:0, scoreB:0,
+    history:[],
+
+    gameRemainingMs:0, gameRunning:false, gameEndAt:0,
+    setRemainingMs:0, setRunning:false, setEndAt:0, setTotalMs:0, setIsFinal:false,
+    setActive:false, // a set is currently in progress (running or paused, not yet resolved)
+    halfStarted:false,
+    halfFinished:false,
+    matchFinished:false,
+
+    audioCtx:null,
+    pendingAction:null
+  };
+
+  // ---------- Helpers ----------
+  function fmt(ms){
+    if(ms<0) ms=0;
+    const totalSec = Math.ceil(ms/1000);
+    const m = Math.floor(totalSec/60);
+    const s = totalSec%60;
+    return m+":"+String(s).padStart(2,"0");
+  }
+  function mmss(minId,secId){
+    const m = parseInt(document.getElementById(minId).value,10)||0;
+    const s = parseInt(document.getElementById(secId).value,10)||0;
+    return (m*60+s)*1000;
+  }
+  function beep(freq,duration,type,vol){
+    try{
+      if(!state.audioCtx){
+        state.audioCtx = new (window.AudioContext||window.webkitAudioContext)();
+      }
+      const ctx = state.audioCtx;
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      osc.type = type||"sine";
+      osc.frequency.value = freq;
+      gain.gain.value = vol!==undefined?vol:0.25;
+      osc.connect(gain); gain.connect(ctx.destination);
+      osc.start();
+      osc.stop(ctx.currentTime + duration/1000);
+    }catch(e){}
+  }
+  function buzzSetEnd(){ beep(320,260,"square",0.22); setTimeout(()=>beep(320,260,"square",0.22),300); }
+  function buzzHalfEnd(){ beep(200,700,"sawtooth",0.22); }
+  function clickTone(){ beep(660,90,"sine",0.18); }
+
+  function showOverlay(title,text,onOk){
+    document.getElementById("overlay-title").textContent = title;
+    document.getElementById("overlay-text").textContent = text;
+    state.pendingAction = onOk;
+    document.getElementById("confirm-overlay").classList.add("active");
+  }
+  function hideOverlay(){ document.getElementById("confirm-overlay").classList.remove("active"); }
+  document.getElementById("overlay-cancel").addEventListener("click", hideOverlay);
+  document.getElementById("overlay-ok").addEventListener("click", ()=>{
+    const fn = state.pendingAction; hideOverlay();
+    if(fn) fn();
+  });
+
+  // ---------- Setup screen ----------
+  document.getElementById("two-halves-toggle").addEventListener("change",(e)=>{
+    document.getElementById("game-duration-label").textContent = e.target.checked
+      ? "ゲームタイム(前後半それぞれ)" : "ゲームタイム(1ゲームのみ)";
+  });
+
+  document.getElementById("final-rule-toggle").addEventListener("change",(e)=>{
+    document.getElementById("final-sub-fields").style.opacity = e.target.checked ? "1":"0.35";
+    document.getElementById("final-sub-fields").style.pointerEvents = e.target.checked ? "auto":"none";
+  });
+
+  document.getElementById("confirm-setup-btn").addEventListener("click", ()=>{
+    state.teamAName = document.getElementById("input-team-a").value.trim() || "Aチーム";
+    state.teamBName = document.getElementById("input-team-b").value.trim() || "Bチーム";
+    state.gameDurationMs = mmss("game-min","game-sec") || 1000;
+    state.setDurationMs = mmss("set-min","set-sec") || 1000;
+    state.finalRuleEnabled = document.getElementById("final-rule-toggle").checked;
+    state.finalThresholdMs = mmss("final-threshold-min","final-threshold-sec");
+    state.finalShortMs = mmss("final-short-min","final-short-sec");
+    state.twoHalves = document.getElementById("two-halves-toggle").checked;
+
+    document.getElementById("team-a-name-display").textContent = state.teamAName;
+    document.getElementById("team-b-name-display").textContent = state.teamBName;
+    document.getElementById("btn-a-out").textContent = state.teamAName+" 全滅";
+    document.getElementById("btn-b-out").textContent = state.teamBName+" 全滅";
+
+    state.gameRemainingMs = state.gameDurationMs;
+    state.setRemainingMs = 0;
+    document.getElementById("game-clock-display").textContent = fmt(state.gameRemainingMs);
+    document.getElementById("set-time-display").textContent = "0:00";
+    document.getElementById("half-label").textContent = state.twoHalves ? "前半" : "試合";
+    document.getElementById("start-set-btn").textContent = state.twoHalves ? "前半スタート" : "試合スタート";
+    updateNextHalfButton();
+
+    document.getElementById("setup-screen").classList.remove("active");
+    document.getElementById("main-screen").classList.add("active");
+  });
+
+  // ---------- Ring geometry ----------
+  const RING_R = 105, RING_CIRC = 2*Math.PI*RING_R;
+  document.getElementById("ring-fg").setAttribute("stroke-dasharray", RING_CIRC.toFixed(1));
+
+  function renderRing(fraction){
+    const ring = document.getElementById("ring-fg");
+    const offset = RING_CIRC * (1-fraction);
+    ring.setAttribute("stroke-dashoffset", offset.toFixed(1));
+    if(fraction <= 0.15){ ring.classList.add("danger"); } else { ring.classList.remove("danger"); }
+  }
+
+  // ---------- Core flow ----------
+  function computeNextSetDuration(){
+    const remaining = state.gameRemainingMs;
+    if(!state.finalRuleEnabled) return {duration: state.setDurationMs, isFinal:false};
+    if(remaining > state.setDurationMs) return {duration: state.setDurationMs, isFinal:false};
+    if(remaining >= state.finalThresholdMs) return {duration: state.setDurationMs, isFinal:true};
+    return {duration: state.finalShortMs, isFinal:true};
+  }
+
+  function startHalf(){
+    state.halfStarted = true;
+    state.halfFinished = false;
+    state.gameRunning = true;
+    state.gameEndAt = Date.now() + state.gameRemainingMs;
+    document.getElementById("start-set-btn").textContent = "セット開始";
+    document.getElementById("start-set-btn").disabled = false;
+    document.getElementById("set-label").textContent = "セット待機中";
+    document.getElementById("pause-btn").textContent = "⏸";
+    updateNextHalfButton();
+    clickTone();
+  }
+
+  function startSet(){
+    if(state.setActive) return;
+    if(state.halfFinished || state.matchFinished) return;
+    const {duration, isFinal} = computeNextSetDuration();
+    state.setNumber += 1;
+    state.setTotalMs = duration;
+    state.setRemainingMs = duration;
+    state.setIsFinal = isFinal;
+    state.setRunning = true;
+    state.setActive = true;
+    state.setEndAt = Date.now() + duration;
+
+    const label = document.getElementById("set-label");
+    label.textContent = (isFinal? "最終セット":"セット "+state.setNumber) + "  (" + fmt(duration) + ")";
+    label.classList.toggle("final", isFinal);
+
+    document.getElementById("start-set-btn").textContent = "セット進行中";
+    document.getElementById("start-set-btn").disabled = true;
+    document.getElementById("btn-a-out").disabled = false;
+    document.getElementById("btn-b-out").disabled = false;
+    document.getElementById("draw-btn").disabled = false;
+    clickTone();
+  }
+
+  function endSet(result){
+    if(!state.setActive) return;
+    state.setActive = false;
+    state.setRunning = false;
+    const elapsed = state.setTotalMs - Math.max(state.setRemainingMs,0);
+
+    let resultText = "";
+    if(result==="A"){ state.scoreB += 2; resultText = state.teamAName+" 全滅 → "+state.teamBName+" 勝ち"; }
+    else if(result==="B"){ state.scoreA += 2; resultText = state.teamBName+" 全滅 → "+state.teamAName+" 勝ち"; }
+    else { state.scoreA += 1; state.scoreB += 1; resultText = "引き分け"; }
+
+    state.history.push({
+      half:state.half, setNumber:state.setNumber, isFinal:state.setIsFinal,
+      result:resultText, elapsed:fmt(elapsed)
+    });
+    renderHistory();
+    renderScores();
+
+    document.getElementById("btn-a-out").disabled = true;
+    document.getElementById("btn-b-out").disabled = true;
+    document.getElementById("draw-btn").disabled = true;
+    document.getElementById("set-label").classList.remove("final");
+
+    if(state.gameRemainingMs <= 0){
+      finishHalf();
+    } else {
+      document.getElementById("start-set-btn").textContent = "次のセットを開始";
+      document.getElementById("start-set-btn").disabled = false;
+      document.getElementById("set-label").textContent = "セット待機中";
+      renderRing(0);
+      document.getElementById("set-time-display").textContent = fmt(0);
+    }
+  }
+
+  function finishHalf(){
+    state.gameRunning = false;
+    state.halfFinished = true;
+    document.getElementById("start-set-btn").disabled = true;
+    if(!state.twoHalves){
+      document.getElementById("start-set-btn").textContent = "試合終了";
+      document.getElementById("set-label").textContent = "試合終了";
+      state.matchFinished = true;
+    } else {
+      document.getElementById("start-set-btn").textContent = state.half===1 ? "前半終了":"後半終了";
+      document.getElementById("set-label").textContent = state.half===1 ? "前半終了 — 後半へ進んでください":"試合終了";
+      if(state.half===2){
+        state.matchFinished = true;
+      }
+    }
+    buzzHalfEnd();
+    updateNextHalfButton();
+  }
+
+  function updateNextHalfButton(){
+    const btn = document.getElementById("next-half-btn");
+    if(!state.twoHalves){
+      btn.style.display = "none";
+      return;
+    }
+    btn.style.display = "";
+    btn.disabled = !(state.half===1 && state.halfFinished);
+  }
+
+  function goToSecondHalf(){
+    state.half = 2;
+    state.setNumber = 0;
+    state.gameRemainingMs = state.gameDurationMs;
+    state.halfStarted = false;
+    state.halfFinished = false;
+    document.getElementById("half-label").textContent = "後半";
+    document.getElementById("game-clock-display").textContent = fmt(state.gameRemainingMs);
+    document.getElementById("game-clock-display").classList.remove("warn");
+    document.getElementById("start-set-btn").textContent = "後半スタート";
+    document.getElementById("start-set-btn").disabled = false;
+    document.getElementById("set-label").textContent = "試合開始を待っています";
+    document.getElementById("set-time-display").textContent = "0:00";
+    renderRing(0);
+    document.getElementById("next-half-btn").disabled = true;
+  }
+
+  function renderScores(){
+    document.getElementById("score-a").textContent = state.scoreA;
+    document.getElementById("score-b").textContent = state.scoreB;
+  }
+
+  function renderHistory(){
+    const list = document.getElementById("history-list");
+    list.innerHTML = "";
+    state.history.forEach(h=>{
+      const li = document.createElement("li");
+      const halfTxt = state.twoHalves ? (h.half===1?"前半 ":"後半 ") : "";
+      const setTxt = h.isFinal ? "最終セット" : ("第"+h.setNumber+"セット");
+      li.innerHTML = "<span>"+halfTxt+setTxt+"</span><b>"+h.result+"</b><span>"+h.elapsed+"</span>";
+      list.appendChild(li);
+    });
+  }
+
+  // ---------- Button wiring ----------
+  document.getElementById("start-set-btn").addEventListener("click", ()=>{
+    if(!state.halfStarted){ startHalf(); return; }
+    startSet();
+  });
+  document.getElementById("btn-a-out").addEventListener("click", ()=> endSet("A"));
+  document.getElementById("btn-b-out").addEventListener("click", ()=> endSet("B"));
+  document.getElementById("draw-btn").addEventListener("click", ()=> endSet("DRAW"));
+
+  document.getElementById("next-half-btn").addEventListener("click", ()=>{
+    showOverlay("後半へ進みますか？","前半の結果は保持されたまま、ゲームタイムとセット数がリセットされます。", goToSecondHalf);
+  });
+
+  document.getElementById("reset-btn").addEventListener("click", ()=>{
+    showOverlay("試合をリセットしますか？","スコア・履歴・設定はすべて初期化されます。", ()=>{
+      location.reload();
+    });
+  });
+
+  document.getElementById("pause-btn").addEventListener("click", ()=>{
+    const btn = document.getElementById("pause-btn");
+    if(!state.halfStarted || state.halfFinished) return;
+    const now = Date.now();
+    if(state.gameRunning || state.setRunning){
+      // pause
+      if(state.gameRunning) state.gameRemainingMs = Math.max(state.gameEndAt-now,0);
+      if(state.setRunning) state.setRemainingMs = Math.max(state.setEndAt-now,0);
+      state.gameRunning = false; state.setRunning = state.setActive ? false : state.setRunning;
+      btn.textContent = "▶";
+    } else {
+      state.gameEndAt = now + state.gameRemainingMs;
+      state.gameRunning = true;
+      if(state.setActive){ state.setEndAt = now + state.setRemainingMs; state.setRunning = true; }
+      btn.textContent = "⏸";
+    }
+  });
+
+  // ---------- Tick loop ----------
+  setInterval(()=>{
+    const now = Date.now();
+
+    if(state.gameRunning){
+      state.gameRemainingMs = state.gameEndAt - now;
+      if(state.gameRemainingMs <= 0){
+        state.gameRemainingMs = 0;
+        state.gameRunning = false;
+        if(!state.setActive){ finishHalf(); }
+      }
+      const gcd = document.getElementById("game-clock-display");
+      gcd.textContent = fmt(state.gameRemainingMs);
+      gcd.classList.toggle("warn", state.gameRemainingMs>0 && state.gameRemainingMs<=60000);
+    }
+
+    if(state.setRunning){
+      state.setRemainingMs = state.setEndAt - now;
+      if(state.setRemainingMs <= 0){
+        state.setRemainingMs = 0;
+        document.getElementById("set-time-display").textContent = fmt(0);
+        renderRing(0);
+        buzzSetEnd();
+        endSet("DRAW");
+      } else {
+        document.getElementById("set-time-display").textContent = fmt(state.setRemainingMs);
+        renderRing(state.setRemainingMs/state.setTotalMs);
+      }
+    }
+  }, 100);
+
+})();
+</script>
+</body>
+</html>
