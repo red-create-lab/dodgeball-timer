@@ -58,6 +58,14 @@
     width:100%;background:var(--bg-panel-2);border:1px solid #2C4A6E;
     color:var(--ink);border-radius:8px;padding:10px 12px;font-size:15px;
   }
+  .field input[type=file]{
+    width:100%;background:var(--bg-panel-2);border:1px solid #2C4A6E;
+    color:var(--ink-dim);border-radius:8px;padding:8px 10px;font-size:12.5px;
+  }
+  .field input[type=file]::file-selector-button{
+    background:var(--gold);color:#20140A;border:none;border-radius:6px;
+    padding:6px 10px;margin-right:10px;font-weight:700;font-size:12px;cursor:pointer;
+  }
   .mmss{display:flex;align-items:center;gap:6px;}
   .mmss input{width:64px;text-align:center;}
   .mmss span{color:var(--ink-dim);font-size:13px;}
@@ -128,6 +136,13 @@
     background:var(--bg-panel);border-radius:var(--radius);
     padding:20px 14px;text-align:center;border-bottom:5px solid transparent;
   }
+  .team-side{display:flex;align-items:stretch;gap:12px;}
+  .team-logo-box{
+    display:none;width:min(240px,38vw);min-width:150px;
+    border-radius:var(--radius);overflow:hidden;background:var(--bg-panel-2);
+  }
+  .team-logo-box.visible{display:block;}
+  .team-logo-box img{width:100%;height:100%;object-fit:cover;display:block;}
   .team-panel.a{border-bottom-color:var(--teamA);}
   .team-panel.b{border-bottom-color:var(--teamB);}
   .team-name{
@@ -215,8 +230,8 @@
 
   @media (max-width:520px){
     .board{gap:14px;}
-    .team-panel{order:2;}
-    .team-panel.a{order:1;}
+    .team-side{order:2;}
+    .team-side:first-child{order:1;}
     .set-timer-wrap{order:0;width:100%;}
   }
 </style>
@@ -245,6 +260,17 @@
         <div class="field">
           <label>チームB 名称</label>
           <input type="text" id="input-team-b" value="Bチーム">
+        </div>
+      </div>
+
+      <div class="field-row">
+        <div class="field">
+          <label>Aチーム ロゴ画像(任意)</label>
+          <input type="file" accept="image/*" id="input-team-a-logo">
+        </div>
+        <div class="field">
+          <label>Bチーム ロゴ画像(任意)</label>
+          <input type="file" accept="image/*" id="input-team-b-logo">
         </div>
       </div>
 
@@ -328,10 +354,13 @@
     </div>
 
     <main class="board">
-      <div class="team-panel a">
-        <div class="team-name" id="team-a-name-display">Aチーム</div>
-        <div class="team-score num" id="score-a">0</div>
-        <button class="win-btn" id="btn-a-win" disabled>WIN</button>
+      <div class="team-side">
+        <div class="team-logo-box" id="team-a-logo-box"><img id="team-a-logo-img" alt=""></div>
+        <div class="team-panel a">
+          <div class="team-name" id="team-a-name-display">Aチーム</div>
+          <div class="team-score num" id="score-a">0</div>
+          <button class="win-btn" id="btn-a-win" disabled>WIN</button>
+        </div>
       </div>
 
       <div class="set-timer-wrap">
@@ -349,10 +378,13 @@
         </div>
       </div>
 
-      <div class="team-panel b">
-        <div class="team-name" id="team-b-name-display">Bチーム</div>
-        <div class="team-score num" id="score-b">0</div>
-        <button class="win-btn" id="btn-b-win" disabled>WIN</button>
+      <div class="team-side">
+        <div class="team-panel b">
+          <div class="team-name" id="team-b-name-display">Bチーム</div>
+          <div class="team-score num" id="score-b">0</div>
+          <button class="win-btn" id="btn-b-win" disabled>WIN</button>
+        </div>
+        <div class="team-logo-box" id="team-b-logo-box"><img id="team-b-logo-img" alt=""></div>
       </div>
     </main>
 
@@ -396,6 +428,7 @@
   // ---------- State ----------
   const state = {
     teamAName:"Aチーム", teamBName:"Bチーム",
+    teamALogo:null, teamBLogo:null,
     gameDurationMs:15*60*1000,
     setDurationMs:3*60*1000,
     finalRuleEnabled:true,
@@ -433,6 +466,26 @@
     const m = parseInt(document.getElementById(minId).value,10)||0;
     const s = parseInt(document.getElementById(secId).value,10)||0;
     return (m*60+s)*1000;
+  }
+  function readFileAsDataURL(file){
+    return new Promise((resolve)=>{
+      if(!file){ resolve(null); return; }
+      const reader = new FileReader();
+      reader.onload = ()=> resolve(reader.result);
+      reader.onerror = ()=> resolve(null);
+      reader.readAsDataURL(file);
+    });
+  }
+  function applyTeamLogo(side, dataUrl){
+    const box = document.getElementById("team-"+side+"-logo-box");
+    const img = document.getElementById("team-"+side+"-logo-img");
+    if(dataUrl){
+      img.src = dataUrl;
+      box.classList.add("visible");
+    } else {
+      img.removeAttribute("src");
+      box.classList.remove("visible");
+    }
   }
   function beep(freq,duration,type,vol){
     try{
@@ -485,7 +538,15 @@
     document.getElementById("final-sub-fields").style.pointerEvents = e.target.checked ? "auto":"none";
   });
 
-  document.getElementById("confirm-setup-btn").addEventListener("click", ()=>{
+  document.getElementById("confirm-setup-btn").addEventListener("click", async ()=>{
+    const fileA = document.getElementById("input-team-a-logo").files[0];
+    const fileB = document.getElementById("input-team-b-logo").files[0];
+    const [logoA, logoB] = await Promise.all([readFileAsDataURL(fileA), readFileAsDataURL(fileB)]);
+    state.teamALogo = logoA;
+    state.teamBLogo = logoB;
+    applyTeamLogo("a", logoA);
+    applyTeamLogo("b", logoB);
+
     state.teamAName = document.getElementById("input-team-a").value.trim() || "Aチーム";
     state.teamBName = document.getElementById("input-team-b").value.trim() || "Bチーム";
     state.gameDurationMs = mmss("game-min","game-sec") || 1000;
