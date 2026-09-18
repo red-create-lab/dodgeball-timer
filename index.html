@@ -202,16 +202,30 @@
   #history-list li b{color:var(--ink);font-weight:700;}
   #history-list:empty::before{content:"まだセットが行われていません";font-size:13px;color:var(--ink-dim);}
 
-  .controls-bar{
-    display:flex;gap:10px;justify-content:center;padding:14px 20px 24px;flex-wrap:wrap;
-    border-top:1px solid #24405F;
-  }
   .ctrl-btn{
     background:var(--bg-panel-2);border:1px solid #2C4A6E;color:var(--ink);
     padding:10px 18px;border-radius:9px;font-size:13px;font-weight:700;
   }
   .ctrl-btn.gold{background:var(--gold);color:#20140A;border-color:var(--gold);}
   .ctrl-btn:disabled{opacity:.3;cursor:not-allowed;}
+
+  .menu-wrap{position:relative;flex:none;}
+  .menu-dropdown{
+    display:none;position:absolute;right:0;top:48px;
+    background:var(--bg-panel);border:1px solid var(--gold);border-radius:10px;
+    min-width:210px;flex-direction:column;z-index:60;overflow:hidden;
+  }
+  .menu-dropdown.open{display:flex;}
+  .menu-item{
+    background:none;border:none;color:var(--ink);
+    padding:13px 16px;text-align:left;font-size:13px;font-weight:700;
+    border-bottom:1px solid #24405F;
+  }
+  .menu-item:last-child{border-bottom:none;}
+  .menu-item:disabled{opacity:.3;cursor:not-allowed;}
+  .menu-item:not(:disabled):active{background:var(--bg-panel-2);}
+  .menu-backdrop{display:none;position:fixed;inset:0;z-index:55;}
+  .menu-backdrop.open{display:block;}
 
   .overlay{
     position:fixed;inset:0;background:rgba(10,16,26,.82);
@@ -346,7 +360,16 @@
       </div>
       <div class="half-pill" id="half-label">前半</div>
       <button class="icon-btn" id="pause-btn" title="一時停止/再開">⏸</button>
+      <div class="menu-wrap">
+        <button class="icon-btn" id="menu-btn" title="メニュー">☰</button>
+        <div class="menu-dropdown" id="menu-dropdown">
+          <button class="menu-item" id="history-open-btn">セット履歴を見る</button>
+          <button class="menu-item" id="undo-btn" disabled>直前の判定を取り消す</button>
+          <button class="menu-item" id="reset-btn">試合をリセット</button>
+        </div>
+      </div>
     </header>
+    <div class="menu-backdrop" id="menu-backdrop"></div>
 
     <div class="game-clock-hero">
       <div class="game-clock-label">ゲームタイム</div>
@@ -387,13 +410,6 @@
         <div class="team-logo-box" id="team-b-logo-box"><img id="team-b-logo-img" alt=""></div>
       </div>
     </main>
-
-    <footer class="controls-bar">
-      <button class="ctrl-btn" id="history-open-btn">セット履歴を見る</button>
-      <button class="ctrl-btn" id="undo-btn" disabled>直前の判定を取り消す</button>
-      <button class="ctrl-btn gold" id="next-half-btn" disabled>後半へ進む</button>
-      <button class="ctrl-btn" id="reset-btn">試合をリセット</button>
-    </footer>
   </section>
 
 </div>
@@ -449,6 +465,7 @@
     halfStarted:false,
     halfFinished:false,
     matchFinished:false,
+    confirmingNextHalf:false, // "前半終了" pressed once, waiting for second press to advance
 
     audioCtx:null,
     pendingAction:null
@@ -521,6 +538,7 @@
   });
 
   document.getElementById("history-open-btn").addEventListener("click", ()=>{
+    closeMenu();
     document.getElementById("history-overlay").classList.add("active");
   });
   document.getElementById("history-close-btn").addEventListener("click", ()=>{
@@ -565,7 +583,6 @@
     document.getElementById("set-time-display").textContent = "0:00";
     document.getElementById("half-label").textContent = state.twoHalves ? "前半" : "試合";
     document.getElementById("start-set-btn").textContent = state.twoHalves ? "前半スタート" : "試合スタート";
-    updateNextHalfButton();
 
     document.getElementById("setup-screen").classList.remove("active");
     document.getElementById("main-screen").classList.add("active");
@@ -594,11 +611,11 @@
   function startHalf(){
     state.halfStarted = true;
     state.halfFinished = false;
+    state.confirmingNextHalf = false;
     document.getElementById("start-set-btn").textContent = "セット開始";
     document.getElementById("start-set-btn").disabled = false;
     document.getElementById("set-label").textContent = "セット待機中";
     document.getElementById("pause-btn").textContent = "⏸";
-    updateNextHalfButton();
     clickTone();
   }
 
@@ -646,9 +663,7 @@
       setIsFinal: state.setIsFinal, setTotalMs: state.setTotalMs,
       gameRemainingMs: state.gameRemainingMs, setRemainingMs: state.setRemainingMs,
       startBtnText: document.getElementById("start-set-btn").textContent,
-      halfLabelText: document.getElementById("half-label").textContent,
-      nextHalfDisplay: document.getElementById("next-half-btn").style.display,
-      nextHalfDisabled: document.getElementById("next-half-btn").disabled
+      halfLabelText: document.getElementById("half-label").textContent
     };
 
     state.setActive = false;
@@ -688,35 +703,29 @@
   function finishHalf(){
     state.running = false;
     state.halfFinished = true;
-    document.getElementById("start-set-btn").disabled = true;
+    state.confirmingNextHalf = false;
     if(!state.twoHalves){
       document.getElementById("start-set-btn").textContent = "試合終了";
+      document.getElementById("start-set-btn").disabled = true;
       document.getElementById("set-label").textContent = "試合終了";
       state.matchFinished = true;
+    } else if(state.half===1){
+      document.getElementById("start-set-btn").textContent = "前半終了";
+      document.getElementById("start-set-btn").disabled = false;
+      document.getElementById("set-label").textContent = "前半終了 — ボタンを押して後半へ進んでください";
     } else {
-      document.getElementById("start-set-btn").textContent = state.half===1 ? "前半終了":"後半終了";
-      document.getElementById("set-label").textContent = state.half===1 ? "前半終了 — 後半へ進んでください":"試合終了";
-      if(state.half===2){
-        state.matchFinished = true;
-      }
+      document.getElementById("start-set-btn").textContent = "後半終了";
+      document.getElementById("start-set-btn").disabled = true;
+      document.getElementById("set-label").textContent = "試合終了";
+      state.matchFinished = true;
     }
     buzzHalfEnd();
-    updateNextHalfButton();
-  }
-
-  function updateNextHalfButton(){
-    const btn = document.getElementById("next-half-btn");
-    if(!state.twoHalves){
-      btn.style.display = "none";
-      return;
-    }
-    btn.style.display = "";
-    btn.disabled = !(state.half===1 && state.halfFinished);
   }
 
   function goToSecondHalf(){
     state.lastSnapshot = null;
     document.getElementById("undo-btn").disabled = true;
+    state.confirmingNextHalf = false;
     state.half = 2;
     state.setNumber = 0;
     state.gameRemainingMs = state.gameDurationMs;
@@ -730,7 +739,6 @@
     document.getElementById("set-label").textContent = "試合開始を待っています";
     document.getElementById("set-time-display").textContent = "0:00";
     renderRing(0);
-    document.getElementById("next-half-btn").disabled = true;
   }
 
   function renderScores(){
@@ -775,8 +783,7 @@
     state.awaitingDecision = true;
 
     document.getElementById("half-label").textContent = snap.halfLabelText;
-    document.getElementById("next-half-btn").style.display = snap.nextHalfDisplay;
-    document.getElementById("next-half-btn").disabled = snap.nextHalfDisabled;
+    state.confirmingNextHalf = false;
 
     document.getElementById("start-set-btn").textContent = snap.startBtnText;
     document.getElementById("start-set-btn").disabled = true;
@@ -801,6 +808,15 @@
 
   // ---------- Button wiring ----------
   document.getElementById("start-set-btn").addEventListener("click", ()=>{
+    if(state.halfFinished && state.twoHalves && state.half===1 && !state.matchFinished){
+      if(!state.confirmingNextHalf){
+        state.confirmingNextHalf = true;
+        document.getElementById("start-set-btn").textContent = "後半へ進む";
+        return;
+      }
+      showOverlay("後半へ進みますか？","前半の結果は保持されたまま、ゲームタイムとセット数がリセットされます。", goToSecondHalf);
+      return;
+    }
     if(!state.halfStarted){ startHalf(); return; }
     startSet();
   });
@@ -808,18 +824,27 @@
   document.getElementById("btn-b-win").addEventListener("click", ()=> endSet("B"));
   document.getElementById("draw-btn").addEventListener("click", ()=> endSet("DRAW"));
   document.getElementById("undo-btn").addEventListener("click", ()=>{
+    closeMenu();
     showOverlay("直前の判定を取り消しますか？","スコアと履歴が1件分元に戻り、そのセットの判定をやり直せます。", undoLastDecision);
   });
 
-  document.getElementById("next-half-btn").addEventListener("click", ()=>{
-    showOverlay("後半へ進みますか？","前半の結果は保持されたまま、ゲームタイムとセット数がリセットされます。", goToSecondHalf);
-  });
-
   document.getElementById("reset-btn").addEventListener("click", ()=>{
+    closeMenu();
     showOverlay("試合をリセットしますか？","スコア・履歴・設定はすべて初期化されます。", ()=>{
       location.reload();
     });
   });
+
+  // ---------- Hamburger menu ----------
+  function closeMenu(){
+    document.getElementById("menu-dropdown").classList.remove("open");
+    document.getElementById("menu-backdrop").classList.remove("open");
+  }
+  document.getElementById("menu-btn").addEventListener("click", ()=>{
+    document.getElementById("menu-dropdown").classList.toggle("open");
+    document.getElementById("menu-backdrop").classList.toggle("open");
+  });
+  document.getElementById("menu-backdrop").addEventListener("click", closeMenu);
 
   document.getElementById("pause-btn").addEventListener("click", ()=>{
     const btn = document.getElementById("pause-btn");
