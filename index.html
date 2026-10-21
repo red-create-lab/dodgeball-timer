@@ -170,12 +170,16 @@
   }
   .team-panel.a .team-score{color:var(--teamA);}
   .team-panel.b .team-score{color:var(--teamB);}
+  .win-btn-row{display:flex;gap:8px;width:100%;}
   .win-btn{
-    width:100%;padding:16px 8px;border-radius:10px;font-weight:700;font-size:16px;
+    flex:1;width:100%;padding:16px 8px;border-radius:10px;font-weight:700;font-size:16px;
     color:#fff;letter-spacing:.02em;
   }
+  .perfect-btn{display:none;}
   .team-panel.a .win-btn{background:var(--teamA-dim);border:1px solid var(--teamA);}
   .team-panel.b .win-btn{background:var(--teamB-dim);border:1px solid var(--teamB);}
+  .team-panel.a .perfect-btn{background:var(--teamA);border:1px solid var(--teamA);}
+  .team-panel.b .perfect-btn{background:var(--teamB);border:1px solid var(--teamB);}
   .win-btn:disabled{opacity:.35;cursor:not-allowed;}
 
   .set-timer-wrap{
@@ -209,10 +213,14 @@
     display:flex;flex-direction:column-reverse;gap:6px;text-align:left;
   }
   #history-list li{
-    display:flex;justify-content:space-between;gap:10px;
+    display:flex;align-items:center;justify-content:space-between;gap:10px;
     background:var(--bg-panel-2);border-radius:8px;padding:9px 12px;font-size:13px;color:var(--ink-dim);
   }
   #history-list li b{color:var(--ink);font-weight:700;}
+  .history-edit-select{
+    flex:1;max-width:220px;background:var(--bg-panel);border:1px solid var(--gold);
+    color:var(--ink);border-radius:6px;padding:6px 8px;font-size:13px;font-weight:700;
+  }
   #history-list:empty::before{content:"まだセットが行われていません";font-size:13px;color:var(--ink-dim);}
 
   .ctrl-btn{
@@ -357,6 +365,49 @@
         </div>
       </div>
 
+      <div class="toggle-row">
+        <div class="toggle-label">
+          セット間もゲームタイムを進める
+          <small>ONの場合、セットとセットの間もゲームタイムが止まらず進み続けます</small>
+        </div>
+        <label class="switch">
+          <input type="checkbox" id="seamless-clock-toggle" checked>
+          <span class="slider"></span>
+        </label>
+      </div>
+
+      <div class="toggle-row">
+        <div class="toggle-label">
+          完全勝利ルールを使う
+          <small>ONにすると「Perfect」「WIN」の2段階で勝利点を分けられます</small>
+        </div>
+        <label class="switch">
+          <input type="checkbox" id="perfect-rule-toggle">
+          <span class="slider"></span>
+        </label>
+      </div>
+
+      <div class="field-row" id="score-points-fields">
+        <div class="field" id="perfect-points-field" style="display:none;">
+          <label>完全勝利の点数</label>
+          <div class="mmss">
+            <input type="number" id="points-perfect" value="3" min="0" max="99">
+          </div>
+        </div>
+        <div class="field">
+          <label id="win-points-label">勝利の点数</label>
+          <div class="mmss">
+            <input type="number" id="points-win" value="2" min="0" max="99">
+          </div>
+        </div>
+        <div class="field">
+          <label>引き分けの点数(両チーム)</label>
+          <div class="mmss">
+            <input type="number" id="points-draw" value="1" min="0" max="99">
+          </div>
+        </div>
+      </div>
+
       <button class="primary-btn" id="confirm-setup-btn">この内容で試合を開始</button>
     </div>
   </section>
@@ -374,12 +425,11 @@
       </div>
       <div class="topbar-status" id="set-label">試合開始を待っています</div>
       <div class="half-pill" id="half-label">前半</div>
-      <button class="icon-btn" id="pause-btn" title="一時停止/再開">⏸</button>
+      <button class="icon-btn" id="pause-btn" title="中断/再開" disabled>⏸</button>
       <div class="menu-wrap">
         <button class="icon-btn" id="menu-btn" title="メニュー">☰</button>
         <div class="menu-dropdown" id="menu-dropdown">
-          <button class="menu-item" id="history-open-btn">セット履歴を見る</button>
-          <button class="menu-item" id="undo-btn" disabled>直前の判定を取り消す</button>
+          <button class="menu-item" id="history-open-btn">セット履歴を見る(編集可)</button>
           <button class="menu-item" id="reset-btn">試合をリセット</button>
         </div>
       </div>
@@ -396,7 +446,10 @@
         <div class="team-panel a">
           <div class="team-name" id="team-a-name-display">Aチーム</div>
           <div class="team-score num" id="score-a">0</div>
-          <button class="win-btn" id="btn-a-win" disabled>WIN</button>
+          <div class="win-btn-row">
+            <button class="win-btn perfect-btn" id="btn-a-perfect" disabled>Perfect</button>
+            <button class="win-btn" id="btn-a-win" disabled>WIN</button>
+          </div>
         </div>
       </div>
 
@@ -419,7 +472,10 @@
         <div class="team-panel b">
           <div class="team-name" id="team-b-name-display">Bチーム</div>
           <div class="team-score num" id="score-b">0</div>
-          <button class="win-btn" id="btn-b-win" disabled>WIN</button>
+          <div class="win-btn-row">
+            <button class="win-btn perfect-btn" id="btn-b-perfect" disabled>Perfect</button>
+            <button class="win-btn" id="btn-b-win" disabled>WIN</button>
+          </div>
         </div>
       </div>
     </main>
@@ -465,21 +521,29 @@
     finalThresholdMs:90*1000,
     finalShortMs:90*1000,
     twoHalves:true,
+    seamlessClock:true, // セット間もゲームタイムを進めるか
+    perfectRuleEnabled:false,
+    pointsPerfect:3, pointsWin:2, pointsDraw:1,
 
     half:1, // 1 or 2
     setNumber:0,
     scoreA:0, scoreB:0,
-    history:[],
+    history:[], // {half, setNumber, isFinal, elapsed, resultType}
 
-    gameRemainingMs:0, gameEndAt:0,
+    gameRemainingMs:0, gameEndAt:0, gameTicking:false,
     setRemainingMs:0, running:false, setEndAt:0, setTotalMs:0, setIsFinal:false,
     setActive:false, // a set is currently in progress (running or paused, not yet resolved)
     awaitingDecision:false, // set time hit 0, waiting for a result button
-    lastSnapshot:null, // for undoing the most recent set decision
     halfStarted:false,
     halfFinished:false,
     matchFinished:false,
     confirmingNextHalf:false, // "前半終了" pressed once, waiting for second press to advance
+
+    suspended:false, // 審判協議などによる明示的な中断
+    suspendedWasSetTicking:false,
+    suspendedWasGameTicking:false,
+    statusTextBeforeSuspend:"",
+    statusClassBeforeSuspend:"",
 
     audioCtx:null,
     pendingAction:null
@@ -570,6 +634,11 @@
     document.getElementById("final-sub-fields").style.pointerEvents = e.target.checked ? "auto":"none";
   });
 
+  document.getElementById("perfect-rule-toggle").addEventListener("change",(e)=>{
+    document.getElementById("perfect-points-field").style.display = e.target.checked ? "block":"none";
+    document.getElementById("win-points-label").textContent = e.target.checked ? "勝利の点数" : "勝利の点数(WINのみ)";
+  });
+
   document.getElementById("confirm-setup-btn").addEventListener("click", async ()=>{
     const fileA = document.getElementById("input-team-a-logo").files[0];
     const fileB = document.getElementById("input-team-b-logo").files[0];
@@ -587,6 +656,12 @@
     state.finalThresholdMs = mmss("final-threshold-min","final-threshold-sec");
     state.finalShortMs = mmss("final-short-min","final-short-sec");
     state.twoHalves = document.getElementById("two-halves-toggle").checked;
+    state.seamlessClock = document.getElementById("seamless-clock-toggle").checked;
+    state.perfectRuleEnabled = document.getElementById("perfect-rule-toggle").checked;
+    state.pointsPerfect = Math.max(0, parseInt(document.getElementById("points-perfect").value,10) || 0);
+    state.pointsWin = Math.max(0, parseInt(document.getElementById("points-win").value,10) || 0);
+    state.pointsDraw = Math.max(0, parseInt(document.getElementById("points-draw").value,10) || 0);
+    applyWinButtonMode();
 
     document.getElementById("team-a-name-display").textContent = state.teamAName;
     document.getElementById("team-b-name-display").textContent = state.teamBName;
@@ -638,6 +713,53 @@
     if(fraction <= 0.15){ ring.classList.add("danger"); } else { ring.classList.remove("danger"); }
   }
 
+  // ---------- Game clock ticking (seamless-mode aware) ----------
+  // セット間もゲームタイムを進める設定がONの場合、ゲームタイムは前後半の
+  // 開始から終了まで、セットの区切りとは独立して進み続ける。
+  function setGameTicking(on){
+    const now = Date.now();
+    if(on && !state.gameTicking){
+      state.gameEndAt = now + state.gameRemainingMs;
+      state.gameTicking = true;
+    } else if(!on && state.gameTicking){
+      state.gameRemainingMs = Math.max(state.gameEndAt - now, 0);
+      state.gameTicking = false;
+    }
+  }
+
+  // ---------- Scoring ----------
+  function pointsForResult(type){
+    switch(type){
+      case "PERFECT_A": return {a: state.perfectRuleEnabled ? state.pointsPerfect : state.pointsWin, b:0};
+      case "WIN_A": return {a: state.pointsWin, b:0};
+      case "PERFECT_B": return {a:0, b: state.perfectRuleEnabled ? state.pointsPerfect : state.pointsWin};
+      case "WIN_B": return {a:0, b: state.pointsWin};
+      case "DRAW": return {a: state.pointsDraw, b: state.pointsDraw};
+      default: return {a:0, b:0};
+    }
+  }
+  function resultLabel(type){
+    switch(type){
+      case "PERFECT_A": return state.teamAName+" Perfect";
+      case "WIN_A": return state.teamAName+" WIN";
+      case "PERFECT_B": return state.teamBName+" Perfect";
+      case "WIN_B": return state.teamBName+" WIN";
+      case "DRAW": return "引き分け";
+      default: return "";
+    }
+  }
+  function recomputeScores(){
+    let a=0,b=0;
+    state.history.forEach(h=>{ const p=pointsForResult(h.resultType); a+=p.a; b+=p.b; });
+    state.scoreA = a; state.scoreB = b;
+    renderScores();
+  }
+
+  function applyWinButtonMode(){
+    const on = state.perfectRuleEnabled;
+    document.querySelectorAll(".perfect-btn").forEach(btn=>{ btn.style.display = on ? "block" : "none"; });
+  }
+
   // ---------- Core flow ----------
   function computeNextSetDuration(){
     const remaining = state.gameRemainingMs;
@@ -655,14 +777,14 @@
     document.getElementById("start-set-btn").disabled = false;
     document.getElementById("set-label").textContent = "セット待機中";
     document.getElementById("pause-btn").textContent = "⏸";
+    document.getElementById("pause-btn").disabled = false;
+    if(state.seamlessClock){ setGameTicking(true); }
     clickTone();
   }
 
   function startSet(){
     if(state.setActive) return;
     if(state.halfFinished || state.matchFinished) return;
-    state.lastSnapshot = null;
-    document.getElementById("undo-btn").disabled = true;
     const {duration, isFinal} = computeNextSetDuration();
     state.setNumber += 1;
     state.setTotalMs = duration;
@@ -672,7 +794,7 @@
     state.running = true;
     const now = Date.now();
     state.setEndAt = now + duration;
-    state.gameEndAt = now + state.gameRemainingMs; // resume game clock together with the set
+    setGameTicking(true); // セットが始まったら必ずゲームタイムも進む(非シームレス設定の場合はここで再開)
 
     const label = document.getElementById("set-label");
     label.textContent = (isFinal? "最終セット":"セット "+state.setNumber) + "  (" + fmt(duration) + ")";
@@ -682,51 +804,40 @@
     document.getElementById("start-set-btn").disabled = true;
     document.getElementById("btn-a-win").disabled = false;
     document.getElementById("btn-b-win").disabled = false;
+    document.getElementById("btn-a-perfect").disabled = false;
+    document.getElementById("btn-b-perfect").disabled = false;
     document.getElementById("draw-btn").disabled = false;
     clickTone();
   }
 
-  function endSet(result){
+  function endSet(resultType){
     if(!state.setActive) return;
     if(state.running){
       const now = Date.now();
-      state.gameRemainingMs = Math.max(state.gameEndAt - now, 0);
       state.setRemainingMs = Math.max(state.setEndAt - now, 0);
     }
-
-    // 取り消し用にミューテーション前の状態を保存
-    state.lastSnapshot = {
-      scoreA: state.scoreA, scoreB: state.scoreB,
-      setNumber: state.setNumber, half: state.half,
-      halfFinished: state.halfFinished, matchFinished: state.matchFinished,
-      setIsFinal: state.setIsFinal, setTotalMs: state.setTotalMs,
-      gameRemainingMs: state.gameRemainingMs, setRemainingMs: state.setRemainingMs,
-      startBtnText: document.getElementById("start-set-btn").textContent,
-      halfLabelText: document.getElementById("half-label").textContent
-    };
+    if(!state.seamlessClock && state.gameTicking){
+      setGameTicking(false); // 非シームレス設定では、セットが終わるとゲームタイムも止まる
+    }
 
     state.setActive = false;
     state.running = false;
     state.awaitingDecision = false;
     const elapsed = state.setTotalMs - Math.max(state.setRemainingMs,0);
 
-    let resultText = "";
-    if(result==="A"){ state.scoreA += 2; resultText = state.teamAName+" WIN"; }
-    else if(result==="B"){ state.scoreB += 2; resultText = state.teamBName+" WIN"; }
-    else { state.scoreA += 1; state.scoreB += 1; resultText = "引き分け"; }
-
     state.history.push({
       half:state.half, setNumber:state.setNumber, isFinal:state.setIsFinal,
-      result:resultText, elapsed:fmt(elapsed)
+      elapsed:fmt(elapsed), resultType
     });
     renderHistory();
-    renderScores();
+    recomputeScores();
 
     document.getElementById("btn-a-win").disabled = true;
     document.getElementById("btn-b-win").disabled = true;
+    document.getElementById("btn-a-perfect").disabled = true;
+    document.getElementById("btn-b-perfect").disabled = true;
     document.getElementById("draw-btn").disabled = true;
     document.getElementById("set-label").classList.remove("final","awaiting");
-    document.getElementById("undo-btn").disabled = false;
 
     if(state.setIsFinal){
       finishHalf();
@@ -741,6 +852,8 @@
 
   function finishHalf(){
     state.running = false;
+    setGameTicking(false); // 前後半が終わったらゲームタイムも必ず止める
+    document.getElementById("pause-btn").disabled = true;
     state.halfFinished = true;
     state.confirmingNextHalf = false;
     if(!state.twoHalves){
@@ -762,14 +875,14 @@
   }
 
   function goToSecondHalf(){
-    state.lastSnapshot = null;
-    document.getElementById("undo-btn").disabled = true;
     state.confirmingNextHalf = false;
     state.half = 2;
     state.setNumber = 0;
     state.gameRemainingMs = state.gameDurationMs;
+    state.gameTicking = false;
     state.halfStarted = false;
     state.halfFinished = false;
+    document.getElementById("pause-btn").disabled = true;
     document.getElementById("half-label").textContent = "後半";
     document.getElementById("game-clock-display").textContent = fmt(state.gameRemainingMs);
     document.getElementById("game-clock-display").classList.remove("warn");
@@ -785,65 +898,52 @@
     document.getElementById("score-b").textContent = state.scoreB;
   }
 
+  // セット履歴は常に編集可能。各行のプルダウンで結果を選び直すと、
+  // スコアは履歴全体から自動で再計算される。
   function renderHistory(){
     const list = document.getElementById("history-list");
     list.innerHTML = "";
-    state.history.forEach(h=>{
+    state.history.forEach((h,idx)=>{
       const li = document.createElement("li");
       const halfTxt = state.twoHalves ? (h.half===1?"前半 ":"後半 ") : "";
       const setTxt = h.isFinal ? "最終セット" : ("第"+h.setNumber+"セット");
-      li.innerHTML = "<span>"+halfTxt+setTxt+"</span><b>"+h.result+"</b><span>"+h.elapsed+"</span>";
+
+      // 表示順: Aチーム系 → 引き分け → Bチーム系
+      const orderedTypes = state.perfectRuleEnabled
+        ? ["PERFECT_A","WIN_A","DRAW","WIN_B","PERFECT_B"]
+        : ["WIN_A","DRAW","WIN_B"];
+
+      const label = document.createElement("span");
+      label.textContent = halfTxt+setTxt;
+
+      const select = document.createElement("select");
+      select.className = "history-edit-select";
+      select.dataset.idx = idx;
+      orderedTypes.forEach(t=>{
+        const opt = document.createElement("option");
+        opt.value = t;
+        opt.textContent = resultLabel(t);
+        if(t===h.resultType) opt.selected = true;
+        select.appendChild(opt);
+      });
+
+      const elapsedSpan = document.createElement("span");
+      elapsedSpan.textContent = h.elapsed;
+
+      li.appendChild(label);
+      li.appendChild(select);
+      li.appendChild(elapsedSpan);
       list.appendChild(li);
     });
   }
 
-  function undoLastDecision(){
-    const snap = state.lastSnapshot;
-    if(!snap) return;
-
-    state.history.pop();
-    renderHistory();
-
-    state.scoreA = snap.scoreA;
-    state.scoreB = snap.scoreB;
-    renderScores();
-
-    state.setNumber = snap.setNumber;
-    state.half = snap.half;
-    state.halfFinished = snap.halfFinished;
-    state.matchFinished = snap.matchFinished;
-    state.setIsFinal = snap.setIsFinal;
-    state.setTotalMs = snap.setTotalMs;
-    state.gameRemainingMs = snap.gameRemainingMs;
-    state.setRemainingMs = snap.setRemainingMs;
-
-    state.setActive = true;
-    state.running = false;
-    state.awaitingDecision = true;
-
-    document.getElementById("half-label").textContent = snap.halfLabelText;
-    state.confirmingNextHalf = false;
-
-    document.getElementById("start-set-btn").textContent = snap.startBtnText;
-    document.getElementById("start-set-btn").disabled = true;
-
-    document.getElementById("game-clock-display").textContent = fmt(state.gameRemainingMs);
-    document.getElementById("game-clock-display").classList.toggle("warn", state.gameRemainingMs>0 && state.gameRemainingMs<=60000);
-    document.getElementById("set-time-display").textContent = fmt(state.setRemainingMs);
-    renderRing(state.setTotalMs>0 ? state.setRemainingMs/state.setTotalMs : 0);
-
-    document.getElementById("btn-a-win").disabled = false;
-    document.getElementById("btn-b-win").disabled = false;
-    document.getElementById("draw-btn").disabled = false;
-
-    const label = document.getElementById("set-label");
-    label.classList.remove("final");
-    label.classList.add("awaiting");
-    label.textContent = "取り消しました。判定を選び直してください";
-
-    state.lastSnapshot = null;
-    document.getElementById("undo-btn").disabled = true;
-  }
+  document.getElementById("history-list").addEventListener("change",(e)=>{
+    if(!e.target.classList.contains("history-edit-select")) return;
+    const idx = parseInt(e.target.dataset.idx,10);
+    if(Number.isNaN(idx) || !state.history[idx]) return;
+    state.history[idx].resultType = e.target.value;
+    recomputeScores();
+  });
 
   // ---------- Button wiring ----------
   document.getElementById("start-set-btn").addEventListener("click", ()=>{
@@ -859,13 +959,11 @@
     if(!state.halfStarted){ startHalf(); return; }
     startSet();
   });
-  document.getElementById("btn-a-win").addEventListener("click", ()=> endSet("A"));
-  document.getElementById("btn-b-win").addEventListener("click", ()=> endSet("B"));
+  document.getElementById("btn-a-win").addEventListener("click", ()=> endSet("WIN_A"));
+  document.getElementById("btn-b-win").addEventListener("click", ()=> endSet("WIN_B"));
+  document.getElementById("btn-a-perfect").addEventListener("click", ()=> endSet("PERFECT_A"));
+  document.getElementById("btn-b-perfect").addEventListener("click", ()=> endSet("PERFECT_B"));
   document.getElementById("draw-btn").addEventListener("click", ()=> endSet("DRAW"));
-  document.getElementById("undo-btn").addEventListener("click", ()=>{
-    closeMenu();
-    showOverlay("直前の判定を取り消しますか？","スコアと履歴が1件分元に戻り、そのセットの判定をやり直せます。", undoLastDecision);
-  });
 
   document.getElementById("reset-btn").addEventListener("click", ()=>{
     closeMenu();
@@ -885,33 +983,55 @@
   });
   document.getElementById("menu-backdrop").addEventListener("click", closeMenu);
 
+  // 中断/再開ボタン: 審判協議などで、動いているもの(ゲームタイム・セットタイムの
+  // どちらか、または両方)をまとめて一時停止/再開する。
   document.getElementById("pause-btn").addEventListener("click", ()=>{
     const btn = document.getElementById("pause-btn");
-    if(!state.setActive || state.awaitingDecision) return; // 進行中のセットがない/判定待ち中は対象外
     const now = Date.now();
-    if(state.running){
-      state.gameRemainingMs = Math.max(state.gameEndAt-now,0);
-      state.setRemainingMs = Math.max(state.setEndAt-now,0);
-      state.running = false;
+    const label = document.getElementById("set-label");
+
+    if(!state.suspended){
+      state.suspendedWasSetTicking = state.running;
+      state.suspendedWasGameTicking = state.gameTicking;
+      if(state.running){
+        state.setRemainingMs = Math.max(state.setEndAt-now,0);
+        state.running = false;
+      }
+      setGameTicking(false);
+      state.suspended = true;
+      state.statusTextBeforeSuspend = label.textContent;
+      state.statusClassBeforeSuspend = label.className;
+      label.textContent = "中断中";
+      label.className = "topbar-status awaiting";
       btn.textContent = "▶";
     } else {
-      state.gameEndAt = now + state.gameRemainingMs;
-      state.setEndAt = now + state.setRemainingMs;
-      state.running = true;
+      state.suspended = false;
+      if(state.suspendedWasSetTicking){
+        state.setEndAt = now + state.setRemainingMs;
+        state.running = true;
+      }
+      if(state.suspendedWasGameTicking){ setGameTicking(true); }
+      label.textContent = state.statusTextBeforeSuspend;
+      label.className = state.statusClassBeforeSuspend;
       btn.textContent = "⏸";
     }
   });
 
   // ---------- Tick loop ----------
-  // ゲームタイムは、セットが進行している間だけ一緒に進む(セット間・待機中は止まったまま)
+  // ゲームタイムはセット間も進める設定(seamlessClock)なら前後半を通して進み、
+  // そうでなければセット進行中のみ進む。セットタイムは常にセット進行中のみ進む。
   setInterval(()=>{
-    if(!state.running) return;
     const now = Date.now();
 
-    state.gameRemainingMs = Math.max(state.gameEndAt - now, 0);
-    const gcd = document.getElementById("game-clock-display");
-    gcd.textContent = fmt(state.gameRemainingMs);
-    gcd.classList.toggle("warn", state.gameRemainingMs>0 && state.gameRemainingMs<=60000);
+    if(state.gameTicking){
+      state.gameRemainingMs = Math.max(state.gameEndAt - now, 0);
+      const gcd = document.getElementById("game-clock-display");
+      gcd.textContent = fmt(state.gameRemainingMs);
+      gcd.classList.toggle("warn", state.gameRemainingMs>0 && state.gameRemainingMs<=60000);
+      if(state.gameRemainingMs<=0){ setGameTicking(false); }
+    }
+
+    if(!state.running) return;
 
     state.setRemainingMs = state.setEndAt - now;
     if(state.setRemainingMs <= 0){
