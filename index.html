@@ -144,17 +144,20 @@
     gap:64px;padding:20px 14px;flex-wrap:nowrap;
   }
   .team-panel{
-    width:360px;min-width:220px;flex-shrink:1;
+    width:100%;
     background:var(--bg-panel);border-radius:var(--radius);
     padding:28px 18px;text-align:center;border-bottom:5px solid transparent;
   }
-  .team-side{display:flex;align-items:stretch;gap:12px;min-width:0;flex-shrink:1;}
+  .team-side{
+    display:flex;flex-direction:column;align-items:stretch;gap:14px;
+    width:360px;min-width:220px;flex-shrink:1;
+  }
   .team-logo-box{
-    display:none;width:240px;min-width:150px;flex-shrink:1;
-    border-radius:var(--radius);overflow:hidden;background:var(--bg-panel-2);
+    display:none;width:100%;height:220px;
+    border-radius:var(--radius);overflow:hidden;background:var(--bg-panel);
   }
   .team-logo-box.visible{display:block;}
-  .team-logo-box img{width:100%;height:100%;object-fit:cover;display:block;}
+  .team-logo-box img{width:100%;height:100%;object-fit:contain;display:block;}
   .team-panel.a{border-bottom-color:var(--teamA);}
   .team-panel.b{border-bottom-color:var(--teamB);}
   .team-name{
@@ -412,12 +415,12 @@
       </div>
 
       <div class="team-side">
+        <div class="team-logo-box" id="team-b-logo-box"><img id="team-b-logo-img" alt=""></div>
         <div class="team-panel b">
           <div class="team-name" id="team-b-name-display">Bチーム</div>
           <div class="team-score num" id="score-b">0</div>
           <button class="win-btn" id="btn-b-win" disabled>WIN</button>
         </div>
-        <div class="team-logo-box" id="team-b-logo-box"><img id="team-b-logo-img" alt=""></div>
       </div>
     </main>
    </div>
