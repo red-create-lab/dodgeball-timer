@@ -779,7 +779,6 @@
     document.getElementById("pause-btn").textContent = "⏸";
     document.getElementById("pause-btn").disabled = false;
     if(state.seamlessClock){ setGameTicking(true); }
-    clickTone();
   }
 
   function startSet(){
@@ -956,7 +955,7 @@
       showOverlay("後半へ進みますか？","前半の結果は保持されたまま、ゲームタイムとセット数がリセットされます。", goToSecondHalf);
       return;
     }
-    if(!state.halfStarted){ startHalf(); return; }
+    if(!state.halfStarted){ startHalf(); startSet(); return; }
     startSet();
   });
   document.getElementById("btn-a-win").addEventListener("click", ()=> endSet("WIN_A"));
