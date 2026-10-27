@@ -106,54 +106,54 @@
   }
   .topbar{
     display:flex;align-items:center;gap:16px;
-    padding:14px 20px;background:var(--bg-panel);
+    padding:12px 24px;background:var(--bg-panel);
     border-bottom:2px solid var(--gold);
   }
-  .brand{display:flex;align-items:center;gap:10px;font-weight:800;font-size:15px;letter-spacing:.02em;flex:none;min-width:0;}
+  .brand{display:flex;align-items:center;gap:10px;font-weight:800;font-size:22px;letter-spacing:.02em;flex:1;min-width:0;}
   .brand-mark{flex:none;}
   .brand-text{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
   .topbar-status{
     flex:1;min-width:0;text-align:center;
-    font-size:24px;font-weight:800;color:var(--gold-soft);letter-spacing:.03em;
+    font-size:34px;font-weight:800;color:var(--gold-soft);letter-spacing:.03em;
     white-space:nowrap;overflow:hidden;text-overflow:ellipsis;padding:0 12px;
   }
   .topbar-status.final{color:var(--danger);}
   .topbar-status.awaiting{color:var(--danger);animation:blink 1s step-start infinite;}
   .half-pill{
     background:var(--navy);border:1px solid var(--gold);color:var(--gold-soft);
-    font-size:12px;font-weight:700;padding:5px 12px;border-radius:999px;letter-spacing:.06em;flex:none;
+    font-size:22px;font-weight:700;padding:8px 22px;border-radius:999px;letter-spacing:.06em;flex:none;
   }
   .game-clock-hero{
-    text-align:center;padding:14px 20px 4px;background:var(--bg-deep);
+    text-align:center;padding:10px 20px 0;background:var(--bg-deep);
   }
   .game-clock-label{
     font-size:12px;color:var(--ink-dim);letter-spacing:.14em;font-weight:700;margin-bottom:2px;
   }
   .game-clock-big{
-    font-size:180px;line-height:1;color:var(--gold-soft);
+    font-size:285px;line-height:.86;color:var(--gold-soft);
   }
   .game-clock-big.warn{color:var(--danger);}
   .icon-btn{
     background:var(--bg-panel-2);border:1px solid #2C4A6E;color:var(--ink);
-    width:38px;height:38px;border-radius:50%;font-size:15px;flex:none;
+    width:56px;height:56px;border-radius:50%;font-size:24px;flex:none;
     display:flex;align-items:center;justify-content:center;
   }
 
   .board{
     flex:1;display:flex;align-items:center;justify-content:center;
-    gap:64px;padding:20px 14px;flex-wrap:nowrap;
+    gap:36px;padding:8px 24px 16px;flex-wrap:nowrap;
   }
   .team-panel{
     width:100%;
     background:var(--bg-panel);border-radius:var(--radius);
-    padding:28px 18px;text-align:center;border-bottom:5px solid transparent;
+    padding:26px 22px 24px;text-align:center;border-bottom:7px solid transparent;
   }
   .team-side{
     display:flex;flex-direction:column;align-items:stretch;gap:14px;
-    width:360px;min-width:220px;flex-shrink:1;
+    width:485px;min-width:220px;flex-shrink:1;
   }
   .team-logo-box{
-    display:none;width:100%;height:220px;
+    display:none;width:100%;height:230px;
     border-radius:var(--radius);overflow:hidden;background:var(--bg-panel);
   }
   .team-logo-box.visible{display:block;}
@@ -161,18 +161,18 @@
   .team-panel.a{border-bottom-color:var(--teamA);}
   .team-panel.b{border-bottom-color:var(--teamB);}
   .team-name{
-    font-size:14px;font-weight:700;color:var(--ink-dim);
-    margin-bottom:4px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+    font-size:40px;font-weight:800;color:var(--ink);
+    margin-bottom:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
   }
   .team-score{
-    font-size:124px;line-height:1;margin:10px 0 20px;
-    -webkit-text-stroke:2px var(--gold-soft);paint-order:stroke fill;
+    font-size:240px;line-height:1;margin:6px 0 22px;
+    -webkit-text-stroke:3px var(--gold-soft);paint-order:stroke fill;
   }
   .team-panel.a .team-score{color:var(--teamA);}
   .team-panel.b .team-score{color:var(--teamB);}
-  .win-btn-row{display:flex;gap:8px;width:100%;}
+  .win-btn-row{display:flex;gap:12px;width:100%;}
   .win-btn{
-    flex:1;width:100%;padding:16px 8px;border-radius:10px;font-weight:700;font-size:16px;
+    flex:1;width:100%;padding:24px 8px;border-radius:14px;font-weight:800;font-size:30px;
     color:#fff;letter-spacing:.02em;
   }
   .perfect-btn{display:none;}
@@ -184,27 +184,28 @@
 
   .set-timer-wrap{
     display:flex;flex-direction:column;align-items:center;
-    width:740px;flex-shrink:0;
+    width:830px;flex-shrink:0;order:2;
   }
   @keyframes blink{50%{opacity:.35;}}
-  .ring-box{position:relative;width:700px;height:700px;}
+  .ring-box{position:relative;width:790px;height:790px;}
   .ring-box svg{width:100%;height:100%;transform:rotate(-90deg);}
-  .ring-bg{fill:none;stroke:#233A56;stroke-width:10;}
-  .ring-fg{fill:none;stroke:var(--gold);stroke-width:10;stroke-linecap:round;transition:stroke-dashoffset .1s linear, stroke .2s;}
+  .ring-bg{fill:none;stroke:#233A56;stroke-width:5;}
+  .ring-fg{fill:none;stroke:var(--gold);stroke-width:5;stroke-linecap:round;transition:stroke-dashoffset .1s linear, stroke .2s;}
   .ring-fg.danger{stroke:var(--danger);}
   .set-time{
     position:absolute;inset:0;display:flex;align-items:center;justify-content:center;
-    font-size:225px;
+    font-size:320px;
   }
-  .set-controls{margin-top:12px;display:flex;flex-direction:column;align-items:center;gap:6px;width:100%;}
+  .set-controls{position:absolute;left:50%;transform:translateX(-50%);top:552px;display:flex;flex-direction:column;align-items:stretch;gap:8px;width:400px;}
   #start-set-btn{
-    width:100%;background:var(--success);color:#08210F;font-weight:800;
-    padding:14px;border-radius:10px;font-size:15px;
+    flex:none;background:var(--success);color:#08210F;font-weight:800;
+    padding:14px 8px;border-radius:12px;font-size:26px;
   }
+  #start-set-btn.ready-mode{background:var(--gold);color:#20140A;}
   #start-set-btn:disabled{background:#2C4A6E;color:var(--ink-dim);}
   #draw-btn{
-    width:100%;background:var(--bg-panel-2);border:1px solid var(--gold);color:var(--gold-soft);
-    font-weight:700;padding:12px;border-radius:10px;font-size:14px;
+    flex:none;background:var(--bg-panel-2);border:1px solid var(--gold);color:var(--gold-soft);
+    font-weight:800;padding:10px 8px;border-radius:12px;font-size:26px;letter-spacing:.08em;
   }
   #draw-btn:disabled{opacity:.3;border-color:#2C4A6E;color:var(--ink-dim);cursor:not-allowed;}
 
@@ -232,14 +233,14 @@
 
   .menu-wrap{position:relative;flex:none;}
   .menu-dropdown{
-    display:none;position:absolute;right:0;top:48px;
+    display:none;position:absolute;right:0;top:66px;
     background:var(--bg-panel);border:1px solid var(--gold);border-radius:10px;
-    min-width:210px;flex-direction:column;z-index:60;overflow:hidden;
+    min-width:400px;flex-direction:column;z-index:60;overflow:hidden;
   }
   .menu-dropdown.open{display:flex;}
   .menu-item{
     background:none;border:none;color:var(--ink);
-    padding:13px 16px;text-align:left;font-size:13px;font-weight:700;
+    padding:20px 24px;text-align:left;font-size:22px;font-weight:700;
     border-bottom:1px solid #24405F;
   }
   .menu-item:last-child{border-bottom:none;}
@@ -263,12 +264,39 @@
   .overlay-card.wide{max-width:520px;width:100%;text-align:left;}
   .overlay-card.wide h2{text-align:center;}
 
-  @media (max-width:520px){
-    .board{gap:14px;}
-    .team-side{order:2;}
-    .team-side:first-child{order:1;}
-    .set-timer-wrap{order:0;width:100%;}
+  /* セット数/状態表示はセットタイマー(リング)の上部に配置 */
+  .ring-box .topbar-status{
+    position:absolute;left:50%;bottom:548px;transform:translateX(-50%);
+    flex:none;width:520px;padding:0;font-size:44px;line-height:1.25;
+    white-space:normal;overflow:visible;text-overflow:clip;z-index:2;
   }
+  /* 中断中: ヘッダー以外を暗くして PAUSE を表示(ヘッダーの▶・コートチェンジ・メニューは操作可) */
+  .topbar{position:relative;z-index:45;}
+  .pause-veil{
+    display:none;position:absolute;inset:0;z-index:40;
+    background:rgba(5,8,15,.86);backdrop-filter:blur(4px);
+    flex-direction:column;align-items:center;justify-content:center;gap:10px;
+  }
+  .pause-veil.active{display:flex;}
+  .pause-text{
+    font-size:300px;font-weight:900;line-height:1;letter-spacing:.12em;
+    color:#FF3B30;text-shadow:0 0 30px rgba(255,59,48,.55),0 0 80px rgba(255,59,48,.35);
+    animation:pausePulse 2s ease-in-out infinite;
+  }
+  .pause-sub{font-size:48px;font-weight:800;color:#FFD400;letter-spacing:.14em;}
+  @keyframes pausePulse{50%{opacity:.75;}}
+  /* 確認ポップアップを大画面向けに拡大 */
+  #confirm-overlay .overlay-card{max-width:640px;width:100%;padding:40px 44px;}
+  #confirm-overlay .overlay-card h2{font-size:32px;margin-bottom:16px;}
+  #confirm-overlay .overlay-card p{font-size:21px;line-height:1.7;margin-bottom:30px;}
+  #confirm-overlay .ctrl-btn{font-size:22px;padding:16px 34px;border-radius:12px;}
+  .side-a{order:1;} .side-b{order:3;}
+  .board.swapped .side-a{order:3;} .board.swapped .side-b{order:1;}
+  .cc-btn{
+    background:var(--bg-panel-2);border:1px solid var(--gold);color:var(--gold-soft);
+    font-size:22px;font-weight:800;padding:10px 22px;border-radius:999px;flex:none;white-space:nowrap;
+  }
+  .cc-btn:disabled{opacity:.3;border-color:#2C4A6E;color:var(--ink-dim);cursor:not-allowed;}
 </style>
 </head>
 <body>
@@ -423,13 +451,15 @@
         </svg>
         <span class="brand-text">Dodgeball Timer</span>
       </div>
-      <div class="topbar-status" id="set-label">試合開始を待っています</div>
+      <button class="cc-btn" id="court-change-btn" title="タイマー停止中に左右のチームを入れ替えます">⇄ コートチェンジ</button>
       <div class="half-pill" id="half-label">前半</div>
       <button class="icon-btn" id="pause-btn" title="中断/再開" disabled>⏸</button>
       <div class="menu-wrap">
         <button class="icon-btn" id="menu-btn" title="メニュー">☰</button>
         <div class="menu-dropdown" id="menu-dropdown">
           <button class="menu-item" id="history-open-btn">セット履歴を見る(編集可)</button>
+          <button class="menu-item" id="set-reset-btn" disabled>↺ セットタイマーをやり直す</button>
+          <button class="menu-item" id="game-reset-btn" disabled>↺ ゲームタイマーをやり直す</button>
           <button class="menu-item" id="reset-btn">試合をリセット</button>
         </div>
       </div>
@@ -440,8 +470,8 @@
       <div class="game-clock-big num" id="game-clock-display">15:00</div>
     </div>
 
-    <main class="board">
-      <div class="team-side">
+    <main class="board" id="board">
+      <div class="team-side side-a">
         <div class="team-logo-box" id="team-a-logo-box"><img id="team-a-logo-img" alt=""></div>
         <div class="team-panel a">
           <div class="team-name" id="team-a-name-display">Aチーム</div>
@@ -456,18 +486,19 @@
       <div class="set-timer-wrap">
         <div class="ring-box">
           <svg viewBox="0 0 240 240">
-            <circle class="ring-bg" cx="120" cy="120" r="105"/>
-            <circle class="ring-fg" id="ring-fg" cx="120" cy="120" r="105" stroke-dasharray="659.7" stroke-dashoffset="0"/>
+            <circle class="ring-bg" cx="120" cy="120" r="112"/>
+            <circle class="ring-fg" id="ring-fg" cx="120" cy="120" r="112" stroke-dasharray="703.7" stroke-dashoffset="0"/>
           </svg>
+          <div class="topbar-status" id="set-label">試合開始を待っています</div>
           <div class="set-time num" id="set-time-display">0:00</div>
-        </div>
         <div class="set-controls">
           <button id="start-set-btn">前半スタート</button>
-          <button id="draw-btn" disabled>引き分け(人数同数)</button>
+          <button id="draw-btn" disabled>DRAW</button>
+        </div>
         </div>
       </div>
 
-      <div class="team-side">
+      <div class="team-side side-b">
         <div class="team-logo-box" id="team-b-logo-box"><img id="team-b-logo-img" alt=""></div>
         <div class="team-panel b">
           <div class="team-name" id="team-b-name-display">Bチーム</div>
@@ -479,6 +510,10 @@
         </div>
       </div>
     </main>
+    <div class="pause-veil" id="pause-veil">
+      <div class="pause-text">PAUSE</div>
+      <div class="pause-sub">PRESS ▶ TO RESUME</div>
+    </div>
    </div>
   </section>
 
@@ -544,6 +579,8 @@
     suspendedWasGameTicking:false,
     statusTextBeforeSuspend:"",
     statusClassBeforeSuspend:"",
+    lastCountdownSec:null,
+    setReady:false,
 
     audioCtx:null,
     pendingAction:null
@@ -592,17 +629,33 @@
       const gain = ctx.createGain();
       osc.type = type||"sine";
       osc.frequency.value = freq;
-      gain.gain.value = vol!==undefined?vol:0.25;
+      const v = vol!==undefined?vol:0.25;
+      const t0 = ctx.currentTime, t1 = t0 + duration/1000;
+      // 終わりを短くフェードさせて「プツッ」というノイズを防ぐ
+      gain.gain.setValueAtTime(v, t0);
+      gain.gain.setValueAtTime(v, Math.max(t0, t1-0.04));
+      gain.gain.linearRampToValueAtTime(0.0001, t1);
       osc.connect(gain); gain.connect(ctx.destination);
-      osc.start();
-      osc.stop(ctx.currentTime + duration/1000);
+      osc.start(t0);
+      osc.stop(t1);
     }catch(e){}
   }
-  function buzzSetEnd(){ beep(320,260,"square",0.22); setTimeout(()=>beep(320,260,"square",0.22),300); }
+  // セット残り10〜6秒: 軽い「ピッ」
+  function countTick(){ beep(880,90,"sine",0.28); }
+  // セット残り5〜1秒: 高く鋭い「ピーッ」(目立つ音)
+  function countStrong(){ beep(1320,200,"square",0.20); beep(660,200,"square",0.10); }
+  // セット終了(0秒): 試合終了ブザー「ブーーー」
+  function buzzSetEnd(){
+    beep(220,3000,"sawtooth",0.22);
+    beep(233,3000,"sawtooth",0.16);
+    beep(110,3000,"square",0.10);
+  }
   function buzzHalfEnd(){ beep(200,700,"sawtooth",0.22); }
   function clickTone(){ beep(660,90,"sine",0.18); }
 
-  function showOverlay(title,text,onOk){
+  function showOverlay(title,text,onOk,okLabel,cancelLabel){
+    document.getElementById("overlay-ok").textContent = okLabel || "OK";
+    document.getElementById("overlay-cancel").textContent = cancelLabel || "キャンセル";
     document.getElementById("overlay-title").textContent = title;
     document.getElementById("overlay-text").textContent = text;
     state.pendingAction = onOk;
@@ -703,7 +756,7 @@
   if(document.fonts && document.fonts.ready){ document.fonts.ready.then(fitStage); }
 
   // ---------- Ring geometry ----------
-  const RING_R = 105, RING_CIRC = 2*Math.PI*RING_R;
+  const RING_R = 112, RING_CIRC = 2*Math.PI*RING_R;
   document.getElementById("ring-fg").setAttribute("stroke-dasharray", RING_CIRC.toFixed(1));
 
   function renderRing(fraction){
@@ -769,6 +822,31 @@
     return {duration: state.finalShortMs, isFinal:true};
   }
 
+  // READY: 次のセットの時間をセットタイマーに表示して、START待ちにする
+  function renderPreparedSet(){
+    const {duration, isFinal} = computeNextSetDuration();
+    const text = (isFinal ? "最終セット" : "セット "+(state.setNumber+1)) + "  (" + fmt(duration) + ")";
+    const cls = "topbar-status" + (isFinal ? " final" : "");
+    const disp = document.getElementById("set-time-display");
+    if(disp.textContent !== fmt(duration)) disp.textContent = fmt(duration);
+    renderRing(1);
+    if(state.suspended){
+      state.statusTextBeforeSuspend = text;
+      state.statusClassBeforeSuspend = cls;
+    } else {
+      const label = document.getElementById("set-label");
+      if(label.textContent !== text) label.textContent = text;
+      if(label.className !== cls) label.className = cls;
+    }
+  }
+  function prepareSet(){
+    state.setReady = true;
+    renderPreparedSet();
+    document.getElementById("start-set-btn").textContent = "START";
+    document.getElementById("start-set-btn").classList.remove("ready-mode");
+    clickTone();
+  }
+
   function startHalf(){
     state.halfStarted = true;
     state.halfFinished = false;
@@ -784,6 +862,7 @@
   function startSet(){
     if(state.setActive) return;
     if(state.halfFinished || state.matchFinished) return;
+    state.setReady = false;
     const {duration, isFinal} = computeNextSetDuration();
     state.setNumber += 1;
     state.setTotalMs = duration;
@@ -791,6 +870,7 @@
     state.setIsFinal = isFinal;
     state.setActive = true;
     state.running = true;
+    state.lastCountdownSec = null;
     const now = Date.now();
     state.setEndAt = now + duration;
     setGameTicking(true); // セットが始まったら必ずゲームタイムも進む(非シームレス設定の場合はここで再開)
@@ -841,7 +921,10 @@
     if(state.setIsFinal){
       finishHalf();
     } else {
-      document.getElementById("start-set-btn").textContent = "次のセットを開始";
+      // スコア確定後は READY → START の2段階で次のセットを始める
+      state.setReady = false;
+      document.getElementById("start-set-btn").textContent = "READY";
+      document.getElementById("start-set-btn").classList.add("ready-mode");
       document.getElementById("start-set-btn").disabled = false;
       document.getElementById("set-label").textContent = "セット待機中";
       renderRing(0);
@@ -863,7 +946,7 @@
     } else if(state.half===1){
       document.getElementById("start-set-btn").textContent = "前半終了";
       document.getElementById("start-set-btn").disabled = false;
-      document.getElementById("set-label").textContent = "前半終了 — ボタンを押して後半へ進んでください";
+      document.getElementById("set-label").textContent = "前半終了";
     } else {
       document.getElementById("start-set-btn").textContent = "後半終了";
       document.getElementById("start-set-btn").disabled = true;
@@ -952,10 +1035,14 @@
         document.getElementById("start-set-btn").textContent = "後半へ進む";
         return;
       }
-      showOverlay("後半へ進みますか？","前半の結果は保持されたまま、ゲームタイムとセット数がリセットされます。", goToSecondHalf);
+      showOverlay("後半へ進みますか？","前半の結果は保持されたまま、ゲームタイムとセット数がリセットされます。", ()=>{
+        goToSecondHalf();
+        showOverlay("コートチェンジしますか？","後半は左右のチームを入れ替えます。(あとからでも、タイマー停止中ならヘッダーのボタンで切り替えられます)", toggleCourt, "コートチェンジする", "しない");
+      });
       return;
     }
     if(!state.halfStarted){ startHalf(); startSet(); return; }
+    if(!state.setActive && !state.setReady && state.setNumber>0){ prepareSet(); return; }
     startSet();
   });
   document.getElementById("btn-a-win").addEventListener("click", ()=> endSet("WIN_A"));
@@ -984,6 +1071,72 @@
 
   // 中断/再開ボタン: 審判協議などで、動いているもの(ゲームタイム・セットタイムの
   // どちらか、または両方)をまとめて一時停止/再開する。
+  // コートチェンジ: 左右のチーム(名前・スコア・ロゴ・ボタン)を入れ替える。
+  // 全タイマーが止まっているときだけ押せる(中断中・前後半の合間・開始前など)。
+  // ---------- タイマーのやり直し(再カウント) ----------
+  // セットタイマー: 進行中のセットの残り時間を最初の時間に戻す(スコア・履歴は変えない)。
+  // 動いていれば最初の時間から動き続け、判定待ちだった場合は判定待ちを解除して再スタート。
+  // 中断中なら最初の時間に戻した状態のまま中断を続け、再開で動き出す。
+  function resetSetTimer(){
+    if(!state.setActive) return;
+    const now = Date.now();
+    state.setRemainingMs = state.setTotalMs;
+    state.lastCountdownSec = null;
+    const labelText = (state.setIsFinal ? "最終セット" : "セット "+state.setNumber) + "  (" + fmt(state.setTotalMs) + ")";
+    const labelClass = "topbar-status" + (state.setIsFinal ? " final" : "");
+    if(state.awaitingDecision){
+      state.awaitingDecision = false;
+      if(state.suspended){ state.suspendedWasSetTicking = true; }
+      else { state.running = true; }
+    }
+    if(state.running){ state.setEndAt = now + state.setTotalMs; }
+    if(state.suspended){
+      state.statusTextBeforeSuspend = labelText;
+      state.statusClassBeforeSuspend = labelClass;
+    } else {
+      const label = document.getElementById("set-label");
+      label.textContent = labelText;
+      label.className = labelClass;
+    }
+    document.getElementById("set-time-display").textContent = fmt(state.setTotalMs);
+    renderRing(1);
+    clickTone();
+  }
+  // ゲームタイマー: 現在の前半/後半のゲームタイムを最初の時間に戻す(セット数・スコア・履歴は変えない)。
+  function resetGameTimer(){
+    if(!state.halfStarted || state.halfFinished) return;
+    state.gameRemainingMs = state.gameDurationMs;
+    if(state.gameTicking){ state.gameEndAt = Date.now() + state.gameDurationMs; }
+    const gcd = document.getElementById("game-clock-display");
+    gcd.textContent = fmt(state.gameRemainingMs);
+    gcd.classList.remove("warn");
+    clickTone();
+  }
+  document.getElementById("set-reset-btn").addEventListener("click", ()=>{
+    closeMenu();
+    if(!state.setActive) return;
+    showOverlay("セットタイマーをやり直しますか？",
+      "このセットの残り時間を "+fmt(state.setTotalMs)+" に戻します。スコア・セット履歴・ゲームタイマーは変わりません。",
+      resetSetTimer, "やり直す", "キャンセル");
+  });
+  document.getElementById("game-reset-btn").addEventListener("click", ()=>{
+    closeMenu();
+    if(!state.halfStarted || state.halfFinished) return;
+    const halfTxt = state.twoHalves ? (state.half===1 ? "前半の" : "後半の") : "";
+    showOverlay("ゲームタイマーをやり直しますか？",
+      halfTxt+"ゲームタイマーを "+fmt(state.gameDurationMs)+" に戻します。セットタイマー・スコア・セット履歴は変わりません。",
+      resetGameTimer, "やり直す", "キャンセル");
+  });
+
+  function toggleCourt(){
+    document.getElementById("board").classList.toggle("swapped");
+    clickTone();
+  }
+  document.getElementById("court-change-btn").addEventListener("click", ()=>{
+    if(state.running || state.gameTicking) return;
+    toggleCourt();
+  });
+
   document.getElementById("pause-btn").addEventListener("click", ()=>{
     const btn = document.getElementById("pause-btn");
     const now = Date.now();
@@ -1002,6 +1155,7 @@
       state.statusClassBeforeSuspend = label.className;
       label.textContent = "中断中";
       label.className = "topbar-status awaiting";
+      document.getElementById("pause-veil").classList.add("active");
       btn.textContent = "▶";
     } else {
       state.suspended = false;
@@ -1013,6 +1167,7 @@
       label.textContent = state.statusTextBeforeSuspend;
       label.className = state.statusClassBeforeSuspend;
       btn.textContent = "⏸";
+      document.getElementById("pause-veil").classList.remove("active");
     }
   });
 
@@ -1021,6 +1176,10 @@
   // そうでなければセット進行中のみ進む。セットタイムは常にセット進行中のみ進む。
   setInterval(()=>{
     const now = Date.now();
+    document.getElementById("court-change-btn").disabled = (state.running || state.gameTicking);
+    if(state.setReady && !state.setActive){ renderPreparedSet(); }
+    document.getElementById("set-reset-btn").disabled = !state.setActive;
+    document.getElementById("game-reset-btn").disabled = !(state.halfStarted && !state.halfFinished);
 
     if(state.gameTicking){
       state.gameRemainingMs = Math.max(state.gameEndAt - now, 0);
@@ -1041,9 +1200,15 @@
       state.awaitingDecision = true;
       buzzSetEnd();
       const label = document.getElementById("set-label");
-      label.textContent = "判定を選んでください(WIN or 引き分け)";
+      label.textContent = "判定を選んでください";
       label.classList.add("awaiting");
     } else {
+      // 残り10秒からカウントダウン音(1秒ごとに1回だけ鳴らす)
+      const sec = Math.ceil(state.setRemainingMs/1000);
+      if(sec<=10 && sec>=1 && sec!==state.lastCountdownSec){
+        state.lastCountdownSec = sec;
+        if(sec<=5) countStrong(); else countTick();
+      }
       document.getElementById("set-time-display").textContent = fmt(state.setRemainingMs);
       renderRing(state.setRemainingMs/state.setTotalMs);
     }
