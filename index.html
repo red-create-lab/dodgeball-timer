@@ -246,7 +246,7 @@
   .menu-item:last-child{border-bottom:none;}
   .menu-item:disabled{opacity:.3;cursor:not-allowed;}
   .menu-item:not(:disabled):active{background:var(--bg-panel-2);}
-  .menu-backdrop{display:none;position:fixed;inset:0;z-index:55;}
+  .menu-backdrop{display:none;position:fixed;inset:0;z-index:44;}
   .menu-backdrop.open{display:block;}
 
   .overlay{
@@ -492,7 +492,7 @@
           <div class="topbar-status" id="set-label">試合開始を待っています</div>
           <div class="set-time num" id="set-time-display">0:00</div>
         <div class="set-controls">
-          <button id="start-set-btn">前半スタート</button>
+          <button id="start-set-btn" class="ready-mode">READY</button>
           <button id="draw-btn" disabled>DRAW</button>
         </div>
         </div>
@@ -724,7 +724,8 @@
     document.getElementById("game-clock-display").textContent = fmt(state.gameRemainingMs);
     document.getElementById("set-time-display").textContent = "0:00";
     document.getElementById("half-label").textContent = state.twoHalves ? "前半" : "試合";
-    document.getElementById("start-set-btn").textContent = state.twoHalves ? "前半スタート" : "試合スタート";
+    document.getElementById("start-set-btn").textContent = "READY";
+    document.getElementById("start-set-btn").classList.add("ready-mode");
 
     document.getElementById("setup-screen").classList.remove("active");
     document.getElementById("main-screen").classList.add("active");
@@ -968,7 +969,9 @@
     document.getElementById("half-label").textContent = "後半";
     document.getElementById("game-clock-display").textContent = fmt(state.gameRemainingMs);
     document.getElementById("game-clock-display").classList.remove("warn");
-    document.getElementById("start-set-btn").textContent = "後半スタート";
+    document.getElementById("start-set-btn").textContent = "READY";
+    document.getElementById("start-set-btn").classList.add("ready-mode");
+    state.setReady = false;
     document.getElementById("start-set-btn").disabled = false;
     document.getElementById("set-label").textContent = "試合開始を待っています";
     document.getElementById("set-time-display").textContent = "0:00";
@@ -1041,7 +1044,11 @@
       });
       return;
     }
-    if(!state.halfStarted){ startHalf(); startSet(); return; }
+    // 前後半の最初: READY でセットタイマーを準備 → START でゲームタイマーとセットタイマーを同時に開始
+    if(!state.halfStarted){
+      if(!state.setReady){ prepareSet(); return; }
+      startHalf(); startSet(); return;
+    }
     if(!state.setActive && !state.setReady && state.setNumber>0){ prepareSet(); return; }
     startSet();
   });
