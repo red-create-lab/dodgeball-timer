@@ -297,6 +297,20 @@
     font-size:22px;font-weight:800;padding:10px 22px;border-radius:999px;flex:none;white-space:nowrap;
   }
   .cc-btn:disabled{opacity:.3;border-color:#2C4A6E;color:var(--ink-dim);cursor:not-allowed;}
+
+  /* v2.9 レイアウト: 全体タイマーをヘッダー内に移し、セットタイマーを最大化(リングにかぶってOK) */
+  #draw-btn{align-self:center;width:250px;}
+  .game-clock-big{font-size:112px;}
+  .set-timer-wrap{width:1025px;}
+  .team-side{width:387px;}
+  .ring-box{width:985px;height:985px;}
+  .set-time{font-size:480px;}
+  .ring-box .topbar-status{bottom:712px;width:648px;font-size:49px;}
+  .set-controls{top:752px;width:499px;}
+  #start-set-btn,#draw-btn{font-size:29px;}
+  .game-clock-hero{position:absolute;left:50%;top:6px;transform:translateX(-50%);padding:0;background:none;z-index:46;}
+  .game-clock-big{line-height:1;}
+  .topbar{min-height:116px;}
 </style>
 </head>
 <body>
@@ -580,6 +594,7 @@
     statusTextBeforeSuspend:"",
     statusClassBeforeSuspend:"",
     lastCountdownSec:null,
+    scheduledSounds:[],
     setReady:false,
 
     audioCtx:null,
@@ -619,7 +634,8 @@
       box.classList.remove("visible");
     }
   }
-  function beep(freq,duration,type,vol){
+  // delaySec: 何秒後に鳴らすか(音声側の時計で正確に予約する)。戻り値のgainを切断すると予約を取り消せる
+  function beep(freq,duration,type,vol,delaySec){
     try{
       if(!state.audioCtx){
         state.audioCtx = new (window.AudioContext||window.webkitAudioContext)();
@@ -630,7 +646,7 @@
       osc.type = type||"sine";
       osc.frequency.value = freq;
       const v = vol!==undefined?vol:0.25;
-      const t0 = ctx.currentTime, t1 = t0 + duration/1000;
+      const t0 = ctx.currentTime + Math.max(0, delaySec||0), t1 = t0 + duration/1000;
       // 終わりを短くフェードさせて「プツッ」というノイズを防ぐ
       gain.gain.setValueAtTime(v, t0);
       gain.gain.setValueAtTime(v, Math.max(t0, t1-0.04));
@@ -638,17 +654,29 @@
       osc.connect(gain); gain.connect(ctx.destination);
       osc.start(t0);
       osc.stop(t1);
-    }catch(e){}
+      gain._t0 = t0;
+      return gain;
+    }catch(e){ return null; }
+  }
+  // 予約済みのカウントダウン音を取り消す(中断・やり直し時)
+  function cancelScheduledSounds(){
+    // まだ鳴り始めていないものだけ取り消す(鳴っている最中の終了ブザーは止めない)
+    const nowA = state.audioCtx ? state.audioCtx.currentTime : 0;
+    (state.scheduledSounds||[]).forEach(g=>{ if(g._t0 > nowA){ try{ g.disconnect(); }catch(e){} } });
+    state.scheduledSounds = [];
+  }
+  function scheduleSound(fn, delaySec){
+    const gains = fn(delaySec).filter(Boolean);
+    state.scheduledSounds = (state.scheduledSounds||[]).concat(gains);
+    if(state.scheduledSounds.length > 30) state.scheduledSounds = state.scheduledSounds.slice(-30);
   }
   // セット残り10〜6秒: 軽い「ピッ」
-  function countTick(){ beep(880,90,"sine",0.28); }
+  function countTick(d){ return [beep(880,90,"sine",0.28,d)]; }
   // セット残り5〜1秒: 高く鋭い「ピーッ」(目立つ音)
-  function countStrong(){ beep(1320,200,"square",0.20); beep(660,200,"square",0.10); }
+  function countStrong(d){ return [beep(1320,200,"square",0.20,d), beep(660,200,"square",0.10,d)]; }
   // セット終了(0秒): 試合終了ブザー「ブーーー」
-  function buzzSetEnd(){
-    beep(220,3000,"sawtooth",0.22);
-    beep(233,3000,"sawtooth",0.16);
-    beep(110,3000,"square",0.10);
+  function buzzSetEnd(d){
+    return [beep(220,3000,"sawtooth",0.22,d), beep(233,3000,"sawtooth",0.16,d), beep(110,3000,"square",0.10,d)];
   }
   function buzzHalfEnd(){ beep(200,700,"sawtooth",0.22); }
   function clickTone(){ beep(660,90,"sine",0.18); }
@@ -892,6 +920,7 @@
 
   function endSet(resultType){
     if(!state.setActive) return;
+    if(state.running){ cancelScheduledSounds(); } // 0秒前に決着した場合、予約済みの音を取り消す
     if(state.running){
       const now = Date.now();
       state.setRemainingMs = Math.max(state.setEndAt - now, 0);
@@ -1089,6 +1118,7 @@
     const now = Date.now();
     state.setRemainingMs = state.setTotalMs;
     state.lastCountdownSec = null;
+    cancelScheduledSounds();
     const labelText = (state.setIsFinal ? "最終セット" : "セット "+state.setNumber) + "  (" + fmt(state.setTotalMs) + ")";
     const labelClass = "topbar-status" + (state.setIsFinal ? " final" : "");
     if(state.awaitingDecision){
@@ -1158,6 +1188,7 @@
       }
       setGameTicking(false);
       state.suspended = true;
+      cancelScheduledSounds(); state.lastCountdownSec = null; // 予約済みのカウント音は鳴らさない
       state.statusTextBeforeSuspend = label.textContent;
       state.statusClassBeforeSuspend = label.className;
       label.textContent = "中断中";
@@ -1205,21 +1236,23 @@
       renderRing(0);
       state.running = false; // 時間切れ。決着ボタンが押されるまでここで停止
       state.awaitingDecision = true;
-      buzzSetEnd();
+      if(state.lastCountdownSec !== 0){ state.lastCountdownSec = 0; buzzSetEnd(0); } // 予約できなかった場合の保険
       const label = document.getElementById("set-label");
       label.textContent = "判定を選んでください";
       label.classList.add("awaiting");
     } else {
-      // 残り10秒からカウントダウン音(1秒ごとに1回だけ鳴らす)
-      const sec = Math.ceil(state.setRemainingMs/1000);
-      if(sec<=10 && sec>=1 && sec!==state.lastCountdownSec){
-        state.lastCountdownSec = sec;
-        if(sec<=5) countStrong(); else countTick();
+      // 残り10秒からのカウントダウン音。表示の数字が切り替わる「その瞬間」に鳴るよう、
+      // 次の切り替わり時刻を計算して音声側の時計で予約する(タイマー処理の揺れに影響されない)
+      const nextSec = Math.ceil(state.setRemainingMs/1000) - 1;      // 次に表示される秒数
+      const untilNext = (state.setRemainingMs - nextSec*1000) / 1000; // それまでの秒数
+      if(nextSec>=0 && nextSec<=10 && nextSec!==state.lastCountdownSec && untilNext<=0.15){
+        state.lastCountdownSec = nextSec;
+        scheduleSound(nextSec===0 ? buzzSetEnd : (nextSec<=5 ? countStrong : countTick), untilNext);
       }
       document.getElementById("set-time-display").textContent = fmt(state.setRemainingMs);
       renderRing(state.setRemainingMs/state.setTotalMs);
     }
-  }, 100);
+  }, 25);
 
 })();
 </script>
