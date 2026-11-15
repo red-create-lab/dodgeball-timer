@@ -99,6 +99,19 @@
 
   /* ---------- Main Screen ---------- */
   #main-screen{background:var(--bg-deep);position:relative;overflow:hidden;height:100dvh;min-height:0;}
+  /* 画面と設計図の縦横比の差で左右(または上下)にできる余白を、隣接する色で塗りつぶす。
+     中身(タイマー・カード・ボタン等)の大きさや配置は一切変えない */
+  #main-screen{
+    background:linear-gradient(to bottom,
+      var(--bg-deep) 0, var(--bg-deep) var(--hdr-top,0px),
+      var(--bg-panel) var(--hdr-top,0px), var(--bg-panel) var(--hdr-line,0px),
+      var(--gold) var(--hdr-line,0px), var(--gold) var(--hdr-bottom,0px),
+      var(--bg-deep) var(--hdr-bottom,0px));
+  }
+  #main-screen::before{content:"";position:absolute;inset:0;z-index:0;display:none;pointer-events:none;}
+  #main-screen.veil-on::before{display:block;top:var(--hdr-bottom,0px);background:rgba(5,8,15,.86);}
+  #main-screen.intro-on::before{display:block;background:#060309;}
+  #stage{z-index:1;}
   #stage{
     position:absolute;top:0;left:0;width:1920px;
     transform-origin:top left;
@@ -353,6 +366,16 @@
   .set-time{font-size:480px;}
   .ring-box .topbar-status{bottom:712px;width:648px;font-size:49px;}
   .set-controls{top:752px;width:499px;}
+  /* READY後(START待ち)だけ出す、このセットの時間の増減ボタン */
+  .adj-btn{display:none;position:absolute;top:0;height:64px;width:120px;border-radius:12px;
+    background:var(--bg-panel-2);border:1px solid var(--gold);color:var(--gold-soft);font-size:24px;font-weight:800;}
+  .adj-btn.show{display:block;}
+  .adj-btn:disabled{opacity:.3;cursor:not-allowed;}
+  .adj-minus{right:calc(100% + 12px);}
+  .adj-plus{left:calc(100% + 12px);}
+  .set-controls.adjusting{width:420px;}
+  .adj-btn{width:112px;}
+  .set-time.adjusted{color:var(--gold-soft);}
   #start-set-btn,#draw-btn{font-size:29px;}
   .game-clock-hero{position:absolute;left:50%;top:6px;transform:translateX(-50%);padding:0;background:none;z-index:46;}
   .game-clock-big{line-height:1;}
@@ -562,7 +585,9 @@
             <div class="death-elapsed num" id="death-elapsed">+0:00</div>
           </div>
         <div class="set-controls">
+          <button class="adj-btn adj-minus" id="set-minus" aria-label="このセットの時間を30秒減らす">−30秒</button>
           <button id="start-set-btn" class="ready-mode">READY</button>
+          <button class="adj-btn adj-plus" id="set-plus" aria-label="このセットの時間を30秒増やす">＋30秒</button>
           <button id="draw-btn" disabled>DRAW</button>
         </div>
         </div>
@@ -683,6 +708,7 @@
     statusTextBeforeSuspend:"",
     statusClassBeforeSuspend:"",
     lastCountdownSec:null,
+    setOverrideMs:null,        // READY後に増減した、このセットだけの時間
     phase:"normal",            // normal → sudden(タイブレーク) → death(時間無制限のサドンデス)
     suddenDurationMs:60*1000,
     deathTicking:false, deathElapsedMs:0, deathStartAt:0, suspendedWasDeath:false,
@@ -907,6 +933,16 @@
     const scaledW = natW*scale, scaledH = natH*scale;
     stage.style.left = ((availW-scaledW)/2) + "px";
     stage.style.top = ((availH-scaledH)/2) + "px";
+    // ヘッダーの帯(紺+金線)を画面の端まで延長するための位置を渡す
+    const tb = stage.querySelector(".topbar");
+    if(tb){
+      const top = (availH-scaledH)/2;
+      const lineW = parseFloat(getComputedStyle(tb).borderBottomWidth)||0;
+      const bottom = top + (tb.offsetTop + tb.offsetHeight)*scale;
+      main.style.setProperty("--hdr-top", (top + tb.offsetTop*scale) + "px");
+      main.style.setProperty("--hdr-line", (bottom - lineW*scale) + "px");
+      main.style.setProperty("--hdr-bottom", bottom + "px");
+    }
   }
   window.addEventListener("resize", fitStage);
   window.addEventListener("orientationchange", fitStage);
@@ -982,7 +1018,9 @@
 
   // READY: 次のセットの時間をセットタイマーに表示して、START待ちにする
   function renderPreparedSet(){
-    const {duration, isFinal} = computeNextSetDuration();
+    const base = computeNextSetDuration();
+    const isFinal = base.isFinal;
+    const duration = (state.setOverrideMs!=null) ? state.setOverrideMs : base.duration;
     const text = (state.phase==="sudden" ? "タイブレーク" : (isFinal ? "最終セット" : "セット "+(state.setNumber+1))) + "  (" + fmt(duration) + ")";
     const cls = "topbar-status" + (isFinal ? " final" : "");
     const disp = document.getElementById("set-time-display");
@@ -999,11 +1037,25 @@
   }
   function prepareSet(){
     state.setReady = true;
+    state.setOverrideMs = null;
     renderPreparedSet();
     document.getElementById("start-set-btn").textContent = "START";
     document.getElementById("start-set-btn").classList.remove("ready-mode");
     clickTone();
   }
+
+  // READY後に、このセットの時間を30秒単位で増減(0:30〜10:00)。次のセットは設定どおりに戻る
+  function adjustPreparedSet(delta){
+    if(!state.setReady || state.setActive) return;
+    const cur = (state.setOverrideMs!=null) ? state.setOverrideMs : computeNextSetDuration().duration;
+    const next = Math.min(10*60*1000, Math.max(30*1000, cur + delta));
+    state.setOverrideMs = next;
+    document.getElementById("set-time-display").classList.toggle("adjusted", next !== computeNextSetDuration().duration);
+    renderPreparedSet();
+    clickTone();
+  }
+  document.getElementById("set-minus").addEventListener("click", ()=> adjustPreparedSet(-30000));
+  document.getElementById("set-plus").addEventListener("click", ()=> adjustPreparedSet(30000));
 
   function startHalf(){
     state.halfStarted = true;
@@ -1021,7 +1073,11 @@
     if(state.setActive) return;
     if(state.halfFinished || state.matchFinished) return;
     state.setReady = false;
-    const {duration, isFinal} = computeNextSetDuration();
+    const base = computeNextSetDuration();
+    const isFinal = base.isFinal;
+    const duration = (state.setOverrideMs!=null) ? state.setOverrideMs : base.duration;
+    state.setOverrideMs = null;
+    document.getElementById("set-time-display").classList.remove("adjusted");
     state.setNumber += 1;
     state.setTotalMs = duration;
     state.setRemainingMs = duration;
@@ -1460,8 +1516,15 @@
   // そうでなければセット進行中のみ進む。セットタイムは常にセット進行中のみ進む。
   setInterval(()=>{
     const now = Date.now();
+    // PAUSE画面・∞演出の背景も余白部分まで広げる(見た目だけ)
+    const mainEl = document.getElementById("main-screen");
+    mainEl.classList.toggle("veil-on", document.getElementById("pause-veil").classList.contains("active"));
+    mainEl.classList.toggle("intro-on", document.getElementById("death-intro").classList.contains("active"));
     document.getElementById("court-change-btn").disabled = (state.running || state.gameTicking || state.deathTicking);
     if(state.setReady && !state.setActive){ renderPreparedSet(); }
+    const adjOn = state.setReady && !state.setActive && state.phase!=="death";
+    ["set-minus","set-plus"].forEach(id=> document.getElementById(id).classList.toggle("show", adjOn));
+    document.querySelector(".set-controls").classList.toggle("adjusting", adjOn);
     document.getElementById("set-reset-btn").disabled = !state.setActive || state.phase==="death";
     document.getElementById("game-reset-btn").disabled = !(state.halfStarted && !state.halfFinished) || state.phase!=="normal";
     if(state.deathTicking){
