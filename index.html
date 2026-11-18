@@ -349,6 +349,11 @@
   #stage.death-mode .board{background:radial-gradient(circle at 50% 52%, rgba(150,18,26,.42) 0%, rgba(80,10,16,.18) 38%, transparent 62%);}
   #stage.death-mode #draw-btn{display:none;}
   @keyframes ringGlow{50%{filter:drop-shadow(0 0 18px rgba(255,59,48,.9));}}
+  /* 署名(制作者クレジット) */
+  .credit{font-size:15px;letter-spacing:.14em;color:var(--ink-dim);opacity:.75;white-space:nowrap;}
+  .credit b{color:var(--gold-soft);font-weight:800;letter-spacing:.18em;}
+  .setup-credit{text-align:center;margin-top:22px;font-size:13px;}
+  .stage-credit{position:absolute;right:30px;bottom:18px;font-size:20px;z-index:2;}
   .side-a{order:1;} .side-b{order:3;}
   .board.swapped .side-a{order:3;} .board.swapped .side-b{order:1;}
   .cc-btn{
@@ -528,6 +533,7 @@
       </div>
 
       <button class="primary-btn" id="confirm-setup-btn">この内容で試合を開始</button>
+      <div class="credit setup-credit">Produced by <b>RED Create Lab</b></div>
     </div>
   </section>
 
@@ -616,6 +622,7 @@
         </div>
       </div>
     </main>
+    <div class="credit stage-credit">Produced by <b>RED Create Lab</b></div>
     <div class="pause-veil" id="pause-veil">
       <div class="pause-text">PAUSE</div>
       <div class="pause-sub">PRESS ▶ TO RESUME</div>
