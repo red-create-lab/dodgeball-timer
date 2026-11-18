@@ -385,11 +385,71 @@
     font-weight:800;padding:10px 8px;border-radius:12px;font-size:29px;letter-spacing:.08em;
   }
   .d-draw:disabled{opacity:.3;border-color:#2C4A6E;color:var(--ink-dim);cursor:not-allowed;}
-  #d-stage .set-controls.manual-end .d-draw{display:none;}
+  /* ドッジボールモードのタイマー画面: 中央に大きなタイマー、四隅にロゴ(上)・チーム名(下) */
+  .d-body{position:relative;height:962px;}
+  .d-logo{display:none;position:absolute;top:24px;width:330px;height:160px;}
+  .d-logo.visible{display:block;}
+  .d-logo img{width:100%;height:100%;object-fit:contain;display:block;}
+  .d-logo.ta{left:44px;} .d-logo.tb{right:44px;}
+  .d-body.swapped .d-logo.ta{left:auto;right:44px;} .d-body.swapped .d-logo.tb{right:auto;left:44px;}
+  .d-label{position:absolute;left:50%;top:54px;transform:translateX(-50%);width:1000px;text-align:center;
+    font-size:48px;font-weight:800;color:var(--gold-soft);letter-spacing:.03em;}
+  .d-label.final,.d-label.awaiting{color:var(--danger);}
+  .d-label.awaiting{animation:blink 1s step-start infinite;}
+  .d-time{position:absolute;left:0;right:0;top:230px;height:580px;display:flex;align-items:center;justify-content:center;
+    font-size:780px;line-height:1;color:var(--ink);letter-spacing:-.01em;}
+  .d-time.long{font-size:600px;}
+  /* 複数セットは下にスコアとWINが入る分、数字を少し上・小さめに */
+  #d-stage:not(.single) .d-time{top:192px;height:546px;font-size:730px;}
+  #d-stage:not(.single) .d-time.long{font-size:560px;}
+  .d-time.adjusted{color:var(--gold-soft);}
+  .d-time.danger{color:#FF5A4E;}
+  .d-team{position:absolute;bottom:34px;display:flex;align-items:flex-end;gap:26px;}
+  .d-team.ta{left:44px;} .d-team.tb{right:44px;flex-direction:row-reverse;}
+  .d-body.swapped .d-team.ta{left:auto;right:44px;flex-direction:row-reverse;}
+  .d-body.swapped .d-team.tb{right:auto;left:44px;flex-direction:row;}
+  .d-team-main{display:flex;flex-direction:column;gap:14px;min-width:300px;}
+  .d-name{font-size:64px;font-weight:900;line-height:1.15;padding-bottom:10px;border-bottom:8px solid var(--teamA);
+    max-width:520px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+  .d-team.ta .d-name{text-align:left;} .d-team.tb .d-name{text-align:right;border-bottom-color:var(--teamB);}
+  .d-body.swapped .d-team.ta .d-name{text-align:right;} .d-body.swapped .d-team.tb .d-name{text-align:left;}
+  .d-win{width:100%;padding:18px 8px;font-size:30px;}
+  .d-team.ta .d-win{background:var(--teamA-dim);border:1px solid var(--teamA);}
+  .d-team.tb .d-win{background:#5A2A20;border:1px solid var(--teamB);}
+  .d-score{font-size:180px;line-height:1;-webkit-text-stroke:3px var(--gold-soft);paint-order:stroke fill;}
+  .d-team.ta .d-score{color:var(--teamA);} .d-team.tb .d-score{color:var(--teamB);}
+  #d-stage.single .d-win,#d-stage.single .d-score{display:none;}
+  #d-stage .stage-credit{right:auto;left:50%;transform:translateX(-50%);bottom:8px;font-size:15px;}
+  .d-controls{position:absolute;left:50%;bottom:44px;transform:translateX(-50%);width:480px;z-index:41;
+    display:flex;flex-direction:column;align-items:stretch;gap:10px;}
+  /* READY中: 数字を少し小さくして、各桁の上下に▲▼を出す */
+  .d-time .tg-c{opacity:.95;}
+  .d-body.setting .d-time{font-size:640px;}
+  .d-body.setting .d-time.long{font-size:520px;}
+  #d-stage:not(.single) .d-body.setting .d-time{top:180px;font-size:560px;}
+  #d-stage:not(.single) .d-body.setting .d-time.long{font-size:450px;}
+  /* 一時停止中: PAUSEは上部に小さく、数字と▲▼は暗転の手前に出して時間を調整できるようにする */
+  #d-veil{justify-content:flex-start;padding-top:150px;}
+  #d-veil .pause-text{font-size:150px;}
+  #d-veil .pause-sub{display:none;}
+  .d-body.paused .d-time{z-index:41;}
+  .d-body.paused .d-arrows .d-arrow{z-index:42;}
+  /* 1セットの一時停止中は「▶ 再開」と「この試合を終了」を横並びにして、▼と重ならないようにする */
+  .d-controls.paused-row{flex-direction:row;width:700px;align-items:stretch;}
+  .d-controls.paused-row .d-start{flex:1;}
+  .d-controls.paused-row .end-half-btn.show{width:250px;align-self:stretch;display:flex;align-items:center;justify-content:center;}
+  .d-body.paused .d-draw{display:none;}
+  .d-arrows{display:none;}
+  .d-body.setting .d-arrows{display:block;}
+  .d-arrow{position:absolute;width:132px;height:62px;transform:translateX(-50%);border-radius:14px;
+    background:rgba(201,168,76,.12);border:1px solid rgba(201,168,76,.55);color:var(--gold-soft);
+    font-size:30px;line-height:1;display:flex;align-items:center;justify-content:center;gap:8px;z-index:3;}
+  .d-arrow small{font-size:17px;font-weight:700;opacity:.85;}
+  .d-arrow:hover{background:rgba(201,168,76,.25);}
+  .d-arrow:active{transform:translateX(-50%) scale(.95);}
+  .d-controls.manual-end .d-draw{display:none;}
   #d-stage.single .d-draw{display:none;}
-  #d-stage.single .team-score,#d-stage.single .win-btn-row{display:none;}
-  #d-stage.single .team-panel{padding:44px 22px;}
-  #d-stage.single .team-name{font-size:64px;}
+  .d-start.pause-mode{background:var(--bg-panel-2);border:2px solid var(--gold);color:var(--gold-soft);}
   .side-a{order:1;} .side-b{order:3;}
   .board.swapped .side-a{order:3;} .board.swapped .side-b{order:1;}
   .cc-btn{
@@ -771,16 +831,16 @@
   </section>
 
   <!-- ===== ドッジボールモード: タイマー画面 ===== -->
+  <!-- 四隅にロゴ(上)とチーム名(下)を置き、中央はタイマーの数字を最大表示 -->
   <section id="d-main" class="screen">
    <div id="d-stage" class="single">
     <header class="topbar">
       <div class="brand">
-        <svg width="24" height="24" class="brand-mark" viewBox="0 0 34 34"><circle cx="17" cy="17" r="13" fill="none" stroke="#C9A84C" stroke-width="3"/><path d="M4.5 13.5c6 3 19 3 25 0M4.5 20.5c6-3 19-3 25 0" fill="none" stroke="#C9A84C" stroke-width="2"/></svg>
+        <svg width="24" height="24" viewBox="0 0 34 34" class="brand-mark"><circle cx="17" cy="17" r="13" fill="none" stroke="#C9A84C" stroke-width="3"/><path d="M4.5 13.5c6 3 19 3 25 0M4.5 20.5c6-3 19-3 25 0" fill="none" stroke="#C9A84C" stroke-width="2"/></svg>
         <span class="brand-text">Dodgeball Timer</span>
       </div>
       <button class="cc-btn" id="d-cc-btn" title="タイマー停止中に左右のチームを入れ替えます">⇄ コートチェンジ</button>
       <div class="half-pill" id="d-mode-pill">1セット</div>
-      <button class="cc-btn pause-pill" id="d-pause-btn" title="一時停止 / 再開" disabled>一時停止</button>
       <div class="menu-wrap">
         <button class="icon-btn" id="d-menu-btn" title="メニュー">☰</button>
         <div class="menu-dropdown" id="d-menu-dropdown">
@@ -796,41 +856,42 @@
       <div class="game-clock-big set-count" id="d-hero"></div>
     </div>
 
-    <main class="board" id="d-board">
-      <div class="team-side side-a">
-        <div class="team-logo-box" id="d-a-logo-box"><img id="d-a-logo-img" alt=""></div>
-        <div class="team-panel a">
-          <div class="team-name" id="d-a-name">Aチーム</div>
-          <div class="team-score num" id="d-a-score">0</div>
-          <div class="win-btn-row"><button class="win-btn" id="d-a-win" disabled>WIN</button></div>
+    <main class="d-body" id="d-board">
+      <div class="d-logo ta" id="d-a-logo-box"><img id="d-a-logo-img" alt=""></div>
+      <div class="d-logo tb" id="d-b-logo-box"><img id="d-b-logo-img" alt=""></div>
+
+      <div class="d-label" id="d-label">試合開始を待っています</div>
+      <!-- READY中だけ表示: 各桁の上下に▲▼(分=1分 / 10秒の位=10秒 / 1秒の位=1秒) -->
+      <div class="d-arrows" id="d-arrows">
+        <button class="d-arrow up" data-g="m" data-delta="60000" aria-label="1分増やす">▲<small>1分</small></button>
+        <button class="d-arrow up" data-g="t" data-delta="10000" aria-label="10秒増やす">▲<small>10秒</small></button>
+        <button class="d-arrow up" data-g="o" data-delta="1000" aria-label="1秒増やす">▲<small>1秒</small></button>
+        <button class="d-arrow down" data-g="m" data-delta="-60000" aria-label="1分減らす">▼<small>1分</small></button>
+        <button class="d-arrow down" data-g="t" data-delta="-10000" aria-label="10秒減らす">▼<small>10秒</small></button>
+        <button class="d-arrow down" data-g="o" data-delta="-1000" aria-label="1秒減らす">▼<small>1秒</small></button>
+      </div>
+      <div class="d-time num" id="d-time">0:00</div>
+
+      <div class="d-team ta">
+        <div class="d-team-main">
+          <div class="d-name" id="d-a-name">Aチーム</div>
+          <button class="win-btn d-win" id="d-a-win" disabled>WIN</button>
         </div>
+        <div class="d-score num" id="d-a-score">0</div>
+      </div>
+      <div class="d-team tb">
+        <div class="d-team-main">
+          <div class="d-name" id="d-b-name">Bチーム</div>
+          <button class="win-btn d-win" id="d-b-win" disabled>WIN</button>
+        </div>
+        <div class="d-score num" id="d-b-score">0</div>
       </div>
 
-      <div class="set-timer-wrap">
-        <div class="ring-box">
-          <svg viewBox="0 0 240 240">
-            <circle class="ring-bg" cx="120" cy="120" r="112"/>
-            <circle class="ring-fg" id="d-ring-fg" cx="120" cy="120" r="112" stroke-dasharray="703.7" stroke-dashoffset="703.7"/>
-          </svg>
-          <div class="topbar-status" id="d-label">試合開始を待っています</div>
-          <div class="set-time num" id="d-time">0:00</div>
-          <div class="set-controls" id="d-controls">
-            <button class="adj-btn adj-minus" id="d-minus" aria-label="時間を30秒減らす">−30秒</button>
-            <button class="d-start ready-mode" id="d-start-btn">READY</button>
-            <button class="adj-btn adj-plus" id="d-plus" aria-label="時間を30秒増やす">＋30秒</button>
-            <button class="d-draw" id="d-draw-btn" disabled>DRAW</button>
-            <button class="end-half-btn" id="d-finish-btn">試合終了</button>
-          </div>
-        </div>
-      </div>
-
-      <div class="team-side side-b">
-        <div class="team-logo-box" id="d-b-logo-box"><img id="d-b-logo-img" alt=""></div>
-        <div class="team-panel b">
-          <div class="team-name" id="d-b-name">Bチーム</div>
-          <div class="team-score num" id="d-b-score">0</div>
-          <div class="win-btn-row"><button class="win-btn" id="d-b-win" disabled>WIN</button></div>
-        </div>
+      <div class="d-controls" id="d-controls">
+        <button class="d-start ready-mode" id="d-start-btn">READY</button>
+        <button class="d-draw" id="d-draw-btn" disabled>DRAW</button>
+        <button class="end-half-btn" id="d-finish-btn">試合終了</button>
+        <button class="end-half-btn" id="d-quit-btn">この試合を終了</button>
       </div>
     </main>
     <div class="credit stage-credit">Produced by <b>RED Create Lab</b></div>
@@ -1922,46 +1983,66 @@
     teamA:"Aチーム", teamB:"Bチーム", setMs:5*60*1000, multi:false,
     setNumber:0, scoreA:0, scoreB:0, history:[],
     ready:false, overrideMs:null, setActive:false, running:false, awaiting:false,
-    endAt:0, remaining:0, total:0, suspended:false, wasRunning:false,
+    endAt:0, remaining:0, total:0, suspended:false,
     matchOver:false, lastCountdownSec:null
   };
   const $ = id => document.getElementById(id);
 
-  function dRenderRing(fraction){
-    const ring = $("d-ring-fg");
-    ring.setAttribute("stroke-dashoffset", (RING_CIRC*(1-fraction)).toFixed(1));
-    ring.classList.toggle("danger", fraction>0 && fraction<=0.15);
+  function dShowTime(ms){
+    const el = $("d-time"), t = fmt(ms);
+    if(el.textContent !== t){
+      // 桁ごとに分けて描画(READY中の▲▼の位置合わせに使う)
+      const [m, ss] = t.split(":");
+      el.innerHTML = '<span class="tg tg-m">'+m+'</span><span class="tg-c">:</span><span class="tg tg-t">'+ss[0]+'</span><span class="tg tg-o">'+ss[1]+'</span>';
+    }
+    el.classList.toggle("long", t.length > 4);                 // 10:00以上は少し小さく
+    el.classList.toggle("danger", d.running && ms>0 && ms<=10000); // 残り10秒は赤
+    if($("d-board").classList.contains("setting")) dPlaceArrows();
+  }
+  // ▲▼を各桁の真上・真下に配置(設計図上の座標で計算)
+  function dPlaceArrows(){
+    const el = $("d-time");
+    const F = parseFloat(getComputedStyle(el).fontSize);
+    const cy = el.offsetTop + el.offsetHeight/2, half = 0.374*F;
+    const pos = { m: el.querySelector(".tg-m"), t: el.querySelector(".tg-t"), o: el.querySelector(".tg-o") };
+    document.querySelectorAll("#d-arrows .d-arrow").forEach(btn=>{
+      const g = pos[btn.dataset.g]; if(!g) return;
+      btn.style.left = (el.offsetLeft + g.offsetLeft + g.offsetWidth/2) + "px";
+      btn.style.top = btn.classList.contains("up") ? (cy - half - 62 - 12) + "px" : (cy + half + 10) + "px";
+    });
   }
   function dRenderScores(){ $("d-a-score").textContent = d.scoreA; $("d-b-score").textContent = d.scoreB; }
   function dApplyLogo(side, url){
     const box = $("d-"+side+"-logo-box"), img = $("d-"+side+"-logo-img");
     if(url){ img.src = url; box.classList.add("visible"); } else { img.removeAttribute("src"); box.classList.remove("visible"); }
   }
-  function dSetLabel(text, cls){ const l = $("d-label"); l.textContent = text; l.className = "topbar-status" + (cls ? " "+cls : ""); }
+  function dSetLabel(text, cls){ const l = $("d-label"); l.textContent = text; l.className = "d-label" + (cls ? " "+cls : ""); }
+  // 中央ボタン: READY(金) / START(緑) / 一時停止(枠) / ▶ 再開(赤)
   function dSetStart(text, mode, disabled){
     const b = $("d-start-btn");
     b.textContent = text;
     b.classList.toggle("ready-mode", mode==="ready");
-    b.classList.toggle("stop-mode", mode==="stop");
+    b.classList.toggle("pause-mode", mode==="pause");
+    b.classList.toggle("stop-mode", mode==="resume");
     b.disabled = !!disabled;
   }
   function dWinButtons(on){ ["d-a-win","d-b-win","d-draw-btn"].forEach(id=> $(id).disabled = !on); }
-  function dLabelForSet(n, ms){ return (d.multi ? "セット "+n : "試合") + "  (" + fmt(ms) + ")"; }
+  // 「試合 (5:00)」「セット 1 (5:00)」のような表記は出さない(時間は大きな数字、セット数はヘッダーで分かるため)
+  function dLabelForSet(n, ms){ return ""; }
 
   function dResetMatch(){
     cancelScheduledSounds();
     Object.assign(d, { setNumber:0, scoreA:0, scoreB:0, history:[], ready:false, overrideMs:null, setActive:false,
-      running:false, awaiting:false, endAt:0, remaining:0, total:0, suspended:false, wasRunning:false,
+      running:false, awaiting:false, endAt:0, remaining:0, total:0, suspended:false,
       matchOver:false, lastCountdownSec:null });
     dRenderScores();
     $("d-veil").classList.remove("active");
     $("d-board").classList.remove("swapped");
-    $("d-time").textContent = "0:00"; $("d-time").classList.remove("adjusted");
-    dRenderRing(0);
+    $("d-time").classList.remove("adjusted");
+    dShowTime(0);
     dSetLabel("試合開始を待っています");
     dSetStart("READY","ready",false);
     dWinButtons(false);
-    const pb = $("d-pause-btn"); pb.textContent = "一時停止"; pb.classList.remove("resume"); pb.disabled = true;
   }
 
   $("d-confirm-btn").addEventListener("click", async ()=>{
@@ -1978,11 +2059,10 @@
     showScreen("d-main");
   });
 
-  // READY → START
   function dPrepare(){
     d.ready = true; d.overrideMs = null;
-    $("d-time").textContent = fmt(d.setMs); $("d-time").classList.remove("adjusted");
-    dRenderRing(1);
+    $("d-time").classList.remove("adjusted");
+    dShowTime(d.setMs);
     dSetLabel(dLabelForSet(d.setNumber+1, d.setMs));
     dSetStart("START","go",false);
     clickTone();
@@ -1996,33 +2076,49 @@
     d.remaining = d.total; d.endAt = Date.now() + d.total;
     d.setActive = true; d.running = true; d.awaiting = false; d.lastCountdownSec = null;
     dSetLabel(dLabelForSet(d.setNumber, d.total));
-    if(d.multi){ dSetStart("セット進行中","go",true); dWinButtons(true); }
-    else { dSetStart("STOP","stop",false); }
-    $("d-pause-btn").disabled = false;
+    dSetStart("一時停止","pause",false);
+    if(d.multi) dWinButtons(true);
     clickTone();
   }
-  // 1セット(スコア無し): 時間切れ or STOP で終了 → もう一度READYで次の試合
-  function dEndSingle(byStop){
-    if(d.running) cancelScheduledSounds();
-    d.running = false; d.setActive = false; d.awaiting = false;
-    if(byStop){ d.remaining = Math.max(d.endAt - Date.now(), 0); buzzHalfEnd(); }
-    dSetLabel(byStop ? "試合終了" : "TIME UP", byStop ? "" : "final");
+  function dPause(){
+    if(!d.running) return;
+    d.remaining = Math.max(d.endAt - Date.now(), 0);
+    d.running = false; d.suspended = true;
+    cancelScheduledSounds(); d.lastCountdownSec = null;
+    $("d-veil").classList.add("active");
+    dSetStart("▶ 再開","resume",false);
+    dShowTime(d.remaining);
+  }
+  function dResume(){
+    if(!d.suspended) return;
+    d.suspended = false; d.running = true;
+    d.endAt = Date.now() + d.remaining;
+    $("d-veil").classList.remove("active");
+    dSetStart("一時停止","pause",false);
+  }
+  // 1セット: 時間切れ、または一時停止中の「この試合を終了」で終了 → READYで次の試合
+  function dEndSingle(byQuit){
+    cancelScheduledSounds();
+    d.running = false; d.setActive = false; d.awaiting = false; d.suspended = false;
+    $("d-veil").classList.remove("active");
+    if(byQuit) buzzHalfEnd();
+    dShowTime(byQuit ? d.remaining : 0);
+    dSetLabel(byQuit ? "試合終了" : "TIME UP", byQuit ? "" : "final");
     dSetStart("READY","ready",false);
-    $("d-pause-btn").disabled = true;
   }
   // 複数セット: WIN / DRAW でセット終了
   function dEndSet(result){
     if(!d.setActive) return;
     if(d.running){ cancelScheduledSounds(); d.remaining = Math.max(d.endAt - Date.now(), 0); }
-    d.running = false; d.setActive = false; d.awaiting = false;
+    d.running = false; d.setActive = false; d.awaiting = false; d.suspended = false;
+    $("d-veil").classList.remove("active");
     if(result==="A") d.scoreA += 1; else if(result==="B") d.scoreB += 1;
     d.history.push({ set:d.setNumber, result });
     dRenderScores();
     dWinButtons(false);
-    $("d-time").textContent = "0:00"; dRenderRing(0);
+    dShowTime(0);
     dSetLabel("セット待機中");
     dSetStart("READY","ready",false);
-    $("d-pause-btn").disabled = true;
   }
   function dFinishMatch(){
     d.matchOver = true;
@@ -2034,7 +2130,11 @@
 
   $("d-start-btn").addEventListener("click", ()=>{
     if(d.matchOver) return;
-    if(d.setActive){ if(!d.multi && d.running) dEndSingle(true); return; }
+    if(d.setActive){
+      if(d.suspended) dResume();
+      else if(d.running) dPause();
+      return;
+    }
     if(!d.ready) dPrepare(); else dStart();
   });
   $("d-a-win").addEventListener("click", ()=> dEndSet("A"));
@@ -2044,37 +2144,29 @@
     if(!d.multi || d.setActive || d.matchOver || d.setNumber===0) return;
     showOverlay("試合を終了しますか？","ここで試合を終了し、取ったセット数で結果を確定します。", dFinishMatch, "試合終了", "キャンセル");
   });
+  $("d-quit-btn").addEventListener("click", ()=>{
+    if(d.multi || !d.suspended) return;
+    showOverlay("この試合を終了しますか？","タイマーを止めて、この試合を終了します。", ()=> dEndSingle(true), "終了する", "キャンセル");
+  });
 
-  // ±30秒(READY中のみ、そのセットだけ)
+  // READY中(そのセットだけ)と一時停止中(残り時間)に、時間を増減(1秒〜60分)
   function dAdjust(delta){
+    if(d.suspended){
+      d.remaining = Math.min(60*60*1000, Math.max(1000, d.remaining + delta));
+      dShowTime(d.remaining);
+      clickTone();
+      return;
+    }
     if(!d.ready || d.setActive) return;
     const cur = (d.overrideMs!=null) ? d.overrideMs : d.setMs;
-    d.overrideMs = Math.min(60*60*1000, Math.max(30*1000, cur + delta));
-    $("d-time").textContent = fmt(d.overrideMs);
+    d.overrideMs = Math.min(60*60*1000, Math.max(1000, cur + delta));
+    dShowTime(d.overrideMs);
     $("d-time").classList.toggle("adjusted", d.overrideMs !== d.setMs);
     dSetLabel(dLabelForSet(d.setNumber+1, d.overrideMs));
     clickTone();
   }
-  $("d-minus").addEventListener("click", ()=> dAdjust(-30000));
-  $("d-plus").addEventListener("click", ()=> dAdjust(30000));
-
-  // 一時停止 / 再開
-  $("d-pause-btn").addEventListener("click", ()=>{
-    const btn = $("d-pause-btn"), now = Date.now();
-    if(!d.suspended){
-      if(!d.setActive) return;
-      d.wasRunning = d.running;
-      if(d.running){ d.remaining = Math.max(d.endAt - now, 0); d.running = false; }
-      cancelScheduledSounds(); d.lastCountdownSec = null;
-      d.suspended = true;
-      $("d-veil").classList.add("active");
-      btn.textContent = "▶ 再開"; btn.classList.add("resume");
-    } else {
-      d.suspended = false;
-      if(d.wasRunning){ d.endAt = now + d.remaining; d.running = true; }
-      $("d-veil").classList.remove("active");
-      btn.textContent = "一時停止"; btn.classList.remove("resume");
-    }
+  document.querySelectorAll("#d-arrows .d-arrow").forEach(btn=>{
+    btn.addEventListener("click", ()=> dAdjust(parseInt(btn.dataset.delta,10)));
   });
 
   // コートチェンジ(タイマー停止中のみ)
@@ -2097,10 +2189,10 @@
     showOverlay("タイマーをやり直しますか？", "残り時間を "+fmt(d.total)+" に戻します。" + (d.multi ? "スコアは変わりません。" : ""), ()=>{
       cancelScheduledSounds(); d.lastCountdownSec = null;
       d.remaining = d.total;
-      if(d.awaiting){ d.awaiting = false; if(d.suspended) d.wasRunning = true; else d.running = true; }
+      if(d.awaiting){ d.awaiting = false; d.running = true; dSetStart("一時停止","pause",false); }
       if(d.running) d.endAt = Date.now() + d.total;
       dSetLabel(dLabelForSet(d.setNumber, d.total));
-      $("d-time").textContent = fmt(d.total); dRenderRing(1);
+      dShowTime(d.total);
       clickTone();
     }, "やり直す", "キャンセル");
   });
@@ -2122,23 +2214,29 @@
     $("d-main").classList.toggle("veil-on", $("d-veil").classList.contains("active"));
     $("d-cc-btn").disabled = d.running;
     $("d-timer-reset-btn").disabled = !d.setActive;
-    const adjOn = d.ready && !d.setActive;
-    ["d-minus","d-plus"].forEach(id=> $(id).classList.toggle("show", adjOn));
-    $("d-controls").classList.toggle("adjusting", adjOn);
+    const adjOn = (d.ready && !d.setActive) || d.suspended;  // 動いていない時(READY中・一時停止中)だけ
+    $("d-board").classList.toggle("paused", d.suspended);
+    $("d-controls").classList.toggle("paused-row", !d.multi && d.suspended);
+    if($("d-board").classList.contains("setting") !== adjOn){
+      $("d-board").classList.toggle("setting", adjOn);
+      if(adjOn) dPlaceArrows();
+    }
     const finOn = d.multi && !d.setActive && !d.matchOver && d.setNumber>0;
     $("d-finish-btn").classList.toggle("show", finOn);
-    $("d-controls").classList.toggle("manual-end", finOn);
+    $("d-quit-btn").classList.toggle("show", !d.multi && d.suspended);
+    $("d-controls").classList.toggle("manual-end", finOn || (!d.multi && d.suspended));
     const hero = d.multi ? (d.matchOver ? "GAME SET" : "SET " + (d.setActive ? d.setNumber : d.setNumber+1)) : "";
     if($("d-hero").textContent !== hero) $("d-hero").textContent = hero;
     if(!d.running) return;
     d.remaining = d.endAt - now;
     if(d.remaining <= 0){
       d.remaining = 0;
-      $("d-time").textContent = fmt(0); dRenderRing(0);
       if(d.lastCountdownSec !== 0){ d.lastCountdownSec = 0; buzzSetEnd(0); }
       if(d.multi){
         d.running = false; d.awaiting = true;
+        dShowTime(0);
         dSetLabel("判定を選んでください","awaiting");
+        dSetStart("判定待ち","pause",true);
       } else {
         dEndSingle(false);
       }
@@ -2150,8 +2248,7 @@
       d.lastCountdownSec = nextSec;
       scheduleSound(nextSec===0 ? buzzSetEnd : (nextSec<=5 ? countStrong : countTick), untilNext);
     }
-    $("d-time").textContent = fmt(d.remaining);
-    dRenderRing(d.remaining/d.total);
+    dShowTime(d.remaining);
   }, 25);
 
 })();
