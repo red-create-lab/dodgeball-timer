@@ -376,6 +376,14 @@
   .set-controls.adjusting{width:420px;}
   .adj-btn{width:112px;}
   .set-time.adjusted{color:var(--gold-soft);}
+  /* 全体タイマーの増減ボタン(ヘッダー内、READY中だけ表示) */
+  .game-clock-hero{display:flex;align-items:center;gap:16px;}
+  .adj-btn.game-adj{position:static;height:52px;width:112px;font-size:22px;}
+  .adj-btn.game-adj.show{display:block;}
+  .game-clock-big.adjusted{color:#fff;}
+  /* 一時停止ボタン(日本語表記)。中断中は「▶ 再開」を赤で目立たせる */
+  .pause-pill{min-width:170px;}
+  .pause-pill.resume{background:#FF3B30;border-color:#FF3B30;color:#fff;}
   #start-set-btn,#draw-btn{font-size:29px;}
   .game-clock-hero{position:absolute;left:50%;top:6px;transform:translateX(-50%);padding:0;background:none;z-index:46;}
   .game-clock-big{line-height:1;}
@@ -536,7 +544,7 @@
       </div>
       <button class="cc-btn" id="court-change-btn" title="タイマー停止中に左右のチームを入れ替えます">⇄ コートチェンジ</button>
       <div class="half-pill" id="half-label">前半</div>
-      <button class="icon-btn" id="pause-btn" title="中断/再開" disabled>⏸</button>
+      <button class="cc-btn pause-pill" id="pause-btn" title="一時停止 / 再開" disabled>一時停止</button>
       <div class="menu-wrap">
         <button class="icon-btn" id="menu-btn" title="メニュー">☰</button>
         <div class="menu-dropdown" id="menu-dropdown">
@@ -544,13 +552,16 @@
           <button class="menu-item" id="set-reset-btn" disabled>↺ セットタイマーをやり直す</button>
           <button class="menu-item" id="game-reset-btn" disabled>↺ ゲームタイマーをやり直す</button>
           <button class="menu-item" id="reset-btn">試合をリセット</button>
+          <button class="menu-item" id="end-match-btn">試合終了(設定画面に戻る)</button>
         </div>
       </div>
     </header>
     <div class="menu-backdrop" id="menu-backdrop"></div>
 
     <div class="game-clock-hero">
+      <button class="adj-btn game-adj" id="game-minus" aria-label="全体タイマーを30秒減らす">−30秒</button>
       <div class="game-clock-big num" id="game-clock-display">15:00</div>
+      <button class="adj-btn game-adj" id="game-plus" aria-label="全体タイマーを30秒増やす">＋30秒</button>
     </div>
 
     <main class="board" id="board">
@@ -1057,6 +1068,24 @@
   document.getElementById("set-minus").addEventListener("click", ()=> adjustPreparedSet(-30000));
   document.getElementById("set-plus").addEventListener("click", ()=> adjustPreparedSet(30000));
 
+  // READY中に、全体(ゲーム)タイマーを30秒単位で増減(0:00〜99:30)。
+  // セット間もゲームタイムが進む設定で動いている最中でも、そのまま増減できる
+  function adjustGameClock(delta){
+    if(!state.setReady || state.setActive || state.phase!=="normal") return;
+    const now = Date.now();
+    const cur = state.gameTicking ? Math.max(state.gameEndAt - now, 0) : state.gameRemainingMs;
+    const next = Math.min(99*60*1000 + 30*1000, Math.max(0, cur + delta));
+    state.gameRemainingMs = next;
+    if(state.gameTicking) state.gameEndAt = now + next;
+    const gcd = document.getElementById("game-clock-display");
+    gcd.textContent = fmt(next);
+    gcd.classList.toggle("warn", next>0 && next<=60000);
+    renderPreparedSet(); // 残りゲームタイムが変わると最終セットの判定・時間も変わるため表示を更新
+    clickTone();
+  }
+  document.getElementById("game-minus").addEventListener("click", ()=> adjustGameClock(-30000));
+  document.getElementById("game-plus").addEventListener("click", ()=> adjustGameClock(30000));
+
   function startHalf(){
     state.halfStarted = true;
     state.halfFinished = false;
@@ -1064,7 +1093,8 @@
     document.getElementById("start-set-btn").textContent = "セット開始";
     document.getElementById("start-set-btn").disabled = false;
     document.getElementById("set-label").textContent = "セット待機中";
-    document.getElementById("pause-btn").textContent = "⏸";
+    document.getElementById("pause-btn").textContent = "一時停止";
+    document.getElementById("pause-btn").classList.remove("resume");
     document.getElementById("pause-btn").disabled = false;
     if(state.seamlessClock){ setGameTicking(true); }
   }
@@ -1386,11 +1416,58 @@
   document.getElementById("btn-b-perfect").addEventListener("click", ()=> endSet("PERFECT_B"));
   document.getElementById("draw-btn").addEventListener("click", ()=> endSet("DRAW"));
 
+  // 試合を開始前の状態に戻す(チーム名・ロゴ・設定はそのまま)
+  function resetMatch(){
+    cancelScheduledSounds();
+    clearTimeout(state.introTimer);
+    Object.assign(state, {
+      half:1, setNumber:0, scoreA:0, scoreB:0, history:[],
+      gameRemainingMs:state.gameDurationMs, gameEndAt:0, gameTicking:false,
+      setRemainingMs:0, running:false, setEndAt:0, setTotalMs:0, setIsFinal:false,
+      setActive:false, awaitingDecision:false,
+      halfStarted:false, halfFinished:false, matchFinished:false, confirmingNextHalf:false,
+      suspended:false, suspendedWasSetTicking:false, suspendedWasGameTicking:false, suspendedWasDeath:false,
+      setReady:false, setOverrideMs:null, lastCountdownSec:null,
+      phase:"normal", deathTicking:false, deathElapsedMs:0, deathStartAt:0
+    });
+    renderScores(); renderHistory();
+    ["pause-veil","death-intro","sd-overlay"].forEach(id=> document.getElementById(id).classList.remove("active"));
+    const stage = document.getElementById("stage");
+    stage.classList.remove("sudden-mode","death-mode");
+    document.getElementById("board").classList.remove("swapped");
+    const gcd = document.getElementById("game-clock-display");
+    gcd.className = "game-clock-big num";
+    gcd.textContent = fmt(state.gameRemainingMs);
+    const std = document.getElementById("set-time-display");
+    std.textContent = "0:00"; std.classList.remove("adjusted");
+    renderRing(0);
+    const label = document.getElementById("set-label");
+    label.textContent = "試合開始を待っています"; label.className = "topbar-status";
+    document.getElementById("half-label").textContent = state.twoHalves ? "前半" : "試合";
+    const btn = document.getElementById("start-set-btn");
+    btn.textContent = "READY"; btn.classList.add("ready-mode"); btn.disabled = false;
+    const draw = document.getElementById("draw-btn");
+    draw.textContent = "DRAW"; draw.disabled = true;
+    ["btn-a-win","btn-b-win","btn-a-perfect","btn-b-perfect"].forEach(id=> document.getElementById(id).disabled = true);
+    const pb = document.getElementById("pause-btn");
+    pb.textContent = "一時停止"; pb.classList.remove("resume"); pb.disabled = true;
+  }
   document.getElementById("reset-btn").addEventListener("click", ()=>{
     closeMenu();
-    showOverlay("試合をリセットしますか？","スコア・履歴・設定はすべて初期化されます。", ()=>{
-      location.reload();
-    });
+    showOverlay("試合をリセットしますか？",
+      "全体タイマー・セットタイマー・スコア・セット履歴を試合開始前の状態に戻します。チーム名・ロゴ・設定はそのままです。",
+      resetMatch, "リセットする", "キャンセル");
+  });
+  document.getElementById("end-match-btn").addEventListener("click", ()=>{
+    closeMenu();
+    showOverlay("試合を終了しますか？",
+      "設定画面に戻ります。現在のスコア・セット履歴は消えます。チーム名・ロゴ・設定は設定画面に残っているので、必要なところだけ変えて次の試合を始められます。",
+      ()=>{
+        resetMatch();
+        document.getElementById("main-screen").classList.remove("active");
+        document.getElementById("setup-screen").classList.add("active");
+        window.scrollTo(0,0);
+      }, "試合終了", "キャンセル");
   });
 
   // ---------- Hamburger menu ----------
@@ -1495,7 +1572,8 @@
       label.textContent = "中断中";
       label.className = "topbar-status awaiting";
       document.getElementById("pause-veil").classList.add("active");
-      btn.textContent = "▶";
+      btn.textContent = "▶ 再開";
+      btn.classList.add("resume");
     } else {
       state.suspended = false;
       if(state.suspendedWasSetTicking){
@@ -1506,7 +1584,8 @@
       if(state.suspendedWasDeath){ state.deathStartAt = now; state.deathTicking = true; }
       label.textContent = state.statusTextBeforeSuspend;
       label.className = state.statusClassBeforeSuspend;
-      btn.textContent = "⏸";
+      btn.textContent = "一時停止";
+      btn.classList.remove("resume");
       document.getElementById("pause-veil").classList.remove("active");
     }
   });
@@ -1524,6 +1603,8 @@
     if(state.setReady && !state.setActive){ renderPreparedSet(); }
     const adjOn = state.setReady && !state.setActive && state.phase!=="death";
     ["set-minus","set-plus"].forEach(id=> document.getElementById(id).classList.toggle("show", adjOn));
+    const gameAdjOn = adjOn && state.phase==="normal";
+    ["game-minus","game-plus"].forEach(id=> document.getElementById(id).classList.toggle("show", gameAdjOn));
     document.querySelector(".set-controls").classList.toggle("adjusting", adjOn);
     document.getElementById("set-reset-btn").disabled = !state.setActive || state.phase==="death";
     document.getElementById("game-reset-btn").disabled = !(state.halfStarted && !state.halfFinished) || state.phase!=="normal";
