@@ -297,6 +297,13 @@
     animation:pausePulse 2s ease-in-out infinite;
   }
   .pause-sub{font-size:48px;font-weight:800;color:#FFD400;letter-spacing:.14em;}
+  /* クロスドッジ: セット中は中央ボタンが「一時停止」、一時停止中は赤い「▶ 再開」(暗転の手前に出す) */
+  #start-set-btn.pause-mode{background:var(--bg-panel-2);border:2px solid var(--gold);color:var(--gold-soft);}
+  #start-set-btn.resume-mode{background:#FF3B30;color:#fff;}
+  .set-controls.pause-live{z-index:41;}
+  .set-controls.pause-live.suspended #draw-btn{display:none;}
+  /* 右上の一時停止ボタンはセット間(全体タイマーだけ動いている時)だけ表示 */
+  #pause-btn.hide{display:none;}
   @keyframes pausePulse{50%{opacity:.75;}}
   /* 確認ポップアップを大画面向けに拡大 */
   #confirm-overlay .overlay-card{max-width:640px;width:100%;padding:40px 44px;}
@@ -1311,12 +1318,18 @@
     return {duration: state.finalShortMs, isFinal:true};
   }
 
+  // セット表記(英語): SET 1 / FINAL SET / TIE BREAK
+  function setLabelName(isFinal, n){
+    if(state.phase==="sudden") return "TIE BREAK";
+    return isFinal ? "FINAL SET" : "SET " + n;
+  }
   // READY: 次のセットの時間をセットタイマーに表示して、START待ちにする
   function renderPreparedSet(){
     const base = computeNextSetDuration();
     const isFinal = base.isFinal;
     const duration = (state.setOverrideMs!=null) ? state.setOverrideMs : base.duration;
-    const text = (state.phase==="sudden" ? "タイブレーク" : (isFinal ? "最終セット" : "セット "+(state.setNumber+1))) + "  (" + fmt(duration) + ")";
+    // READY中だけ、次のセットの時間も併記する(例: SET 2 (3:00))
+    const text = setLabelName(isFinal, state.setNumber+1) + "  (" + fmt(duration) + ")";
     const cls = "topbar-status" + (isFinal ? " final" : "");
     const disp = document.getElementById("set-time-display");
     if(disp.textContent !== fmt(duration)) disp.textContent = fmt(duration);
@@ -1417,7 +1430,7 @@
     if(state.phase==="normal" && state.useGameClock) setGameTicking(true); // セットが始まったら必ずゲームタイムも進む(非シームレス設定の場合はここで再開)
 
     const label = document.getElementById("set-label");
-    label.textContent = (state.phase==="sudden" ? "タイブレーク" : (isFinal? "最終セット":"セット "+state.setNumber)) + "  (" + fmt(duration) + ")";
+    label.textContent = setLabelName(isFinal, state.setNumber); // セット中は時間を併記しない(時間は大きな数字で分かる)
     label.classList.toggle("final", isFinal);
 
     document.getElementById("start-set-btn").textContent = "セット進行中";
@@ -1690,6 +1703,7 @@
 
   // ---------- Button wiring ----------
   document.getElementById("start-set-btn").addEventListener("click", ()=>{
+    if(setPauseLive()){ togglePause(); return; } // セット中は一時停止 / 再開ボタンとして動く
     if(state.phase==="death"){
       if(!state.deathTicking && !state.setActive && !state.matchFinished) startDeath();
       return;
@@ -1799,7 +1813,7 @@
     state.setRemainingMs = state.setTotalMs;
     state.lastCountdownSec = null;
     cancelScheduledSounds();
-    const labelText = (state.phase==="sudden" ? "タイブレーク" : (state.setIsFinal ? "最終セット" : "セット "+state.setNumber)) + "  (" + fmt(state.setTotalMs) + ")";
+    const labelText = setLabelName(state.setIsFinal, state.setNumber);
     const labelClass = "topbar-status" + (state.setIsFinal ? " final" : "");
     if(state.awaitingDecision){
       state.awaitingDecision = false;
@@ -1854,7 +1868,8 @@
     toggleCourt();
   });
 
-  document.getElementById("pause-btn").addEventListener("click", ()=>{
+  document.getElementById("pause-btn").addEventListener("click", ()=> togglePause());
+  function togglePause(){
     const btn = document.getElementById("pause-btn");
     const now = Date.now();
     const label = document.getElementById("set-label");
@@ -1892,7 +1907,34 @@
       btn.classList.remove("resume");
       document.getElementById("pause-veil").classList.remove("active");
     }
-  });
+    syncPauseButtons();
+  }
+  // セット中(タイブレーク・サドンデス含む)か、その一時停止中か
+  function setPauseLive(){
+    return state.running || state.deathTicking ||
+      (state.suspended && (state.suspendedWasSetTicking || state.suspendedWasDeath));
+  }
+  // 中央ボタンと右上ボタンの出し分け
+  function syncPauseButtons(){
+    const live = setPauseLive();
+    const sb = document.getElementById("start-set-btn");
+    const ctr = document.querySelector(".set-controls");
+    ctr.classList.toggle("pause-live", live);
+    ctr.classList.toggle("suspended", live && state.suspended);
+    document.getElementById("pause-btn").classList.toggle("hide", live || state.matchFinished || state.halfFinished || !(state.gameTicking || state.suspended));
+    if(live){
+      const t = state.suspended ? "▶ 再開" : "一時停止";
+      if(sb.textContent !== t) sb.textContent = t;
+      sb.disabled = false;
+      sb.classList.toggle("resume-mode", state.suspended);
+      sb.classList.toggle("pause-mode", !state.suspended);
+      sb.classList.remove("ready-mode");
+    } else if(sb.classList.contains("pause-mode") || sb.classList.contains("resume-mode")){
+      // セットが時間切れで止まった直後など: 元の「セット進行中」表示に戻す(判定後は各処理が上書き)
+      sb.classList.remove("pause-mode","resume-mode");
+      if(sb.textContent==="一時停止" || sb.textContent==="▶ 再開"){ sb.textContent = state.phase==="death" ? "決着まで続行" : "セット進行中"; sb.disabled = true; }
+    }
+  }
 
   // ---------- Tick loop ----------
   // ゲームタイムはセット間も進める設定(seamlessClock)なら前後半を通して進み、
@@ -1904,6 +1946,7 @@
     mainEl.classList.toggle("veil-on", document.getElementById("pause-veil").classList.contains("active"));
     mainEl.classList.toggle("intro-on", document.getElementById("death-intro").classList.contains("active"));
     document.getElementById("court-change-btn").disabled = (state.running || state.gameTicking || state.deathTicking);
+    syncPauseButtons();
     if(state.setReady && !state.setActive){ renderPreparedSet(); }
     const adjOn = state.setReady && !state.setActive && state.phase!=="death";
     ["set-minus","set-plus"].forEach(id=> document.getElementById(id).classList.toggle("show", adjOn));
