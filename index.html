@@ -205,6 +205,9 @@
   .ring-bg{fill:none;stroke:#233A56;stroke-width:5;}
   .ring-fg{fill:none;stroke:var(--gold);stroke-width:5;stroke-linecap:round;transition:stroke-dashoffset .1s linear, stroke .2s;}
   .ring-fg.danger{stroke:var(--danger);}
+  /* 残り10秒未満の小数部分(.23)は半分の大きさ */
+  .num .dec,.set-time .dec,.d-time .dec{font-size:.5em;letter-spacing:0;}
+  .set-time,.d-time{font-variant-numeric:tabular-nums;} /* 高速で変わっても数字の幅がぶれないように */
   .set-time{
     position:absolute;inset:0;display:flex;align-items:center;justify-content:center;
     font-size:320px;
@@ -1005,6 +1008,19 @@
   };
 
   // ---------- Helpers ----------
+  // 残り10秒未満(9.99秒以下)はカウント中、小数点以下2桁まで表示(例: 9.99 → 0.01)
+  // 端数は切り上げなので、カウント音・ブザーが鳴る瞬間に「9.00」「…」「0.00」が出る
+  function decParts(ms){
+    if(!(ms>0 && ms<=9990)) return null;
+    const cs = Math.ceil(ms/10);                       // 1/100秒単位
+    return { sec: String(Math.floor(cs/100)), dec: "." + String(cs%100).padStart(2,"0") };
+  }
+  // タイマー表示に数字を書き込む(小数部分は小さく)。変化がなければ書き換えない
+  function writeTime(el, ms){
+    const dp = decParts(ms);
+    if(!dp){ const t = fmt(ms); if(el.textContent !== t) el.textContent = t; return; }
+    if(el.textContent !== dp.sec + dp.dec) el.innerHTML = dp.sec + '<span class="dec">' + dp.dec + '</span>';
+  }
   function fmt(ms){
     if(ms<0) ms=0;
     const totalSec = Math.ceil(ms/1000);
@@ -2003,7 +2019,7 @@
         state.lastCountdownSec = nextSec;
         scheduleSound(nextSec===0 ? buzzSetEnd : (nextSec<=5 ? countStrong : countTick), untilNext);
       }
-      document.getElementById("set-time-display").textContent = fmt(state.setRemainingMs);
+      writeTime(document.getElementById("set-time-display"), state.setRemainingMs);
       renderRing(state.setRemainingMs/state.setTotalMs);
     }
   }, 25);
@@ -2034,13 +2050,25 @@
   const $ = id => document.getElementById(id);
 
   function dShowTime(ms){
-    const el = $("d-time"), t = fmt(ms);
-    if(el.textContent !== t){
-      // 桁ごとに分けて描画(READY中の▲▼の位置合わせに使う)
-      const [m, ss] = t.split(":");
-      el.innerHTML = '<span class="tg tg-m">'+m+'</span><span class="tg-c">:</span><span class="tg tg-t">'+ss[0]+'</span><span class="tg tg-o">'+ss[1]+'</span>';
+    const el = $("d-time");
+    const dp = decParts(ms);
+    if(d.running && dp){
+      // カウント中の残り10秒未満: 「7.23」(小数部分は小さく)。この間▲▼は出ない
+      writeTime(el, ms);
+      el.classList.remove("long");
+    } else {
+      // 一時停止中に端数が残っている(残り10秒未満)場合は「0:07.23」と小数も出し、▲▼は分・10秒・1秒の桁に合わせる
+      const pausedDec = !!dp && !d.running && d.suspended && ms % 1000 !== 0;
+      const t = pausedDec ? "0:0" + dp.sec : fmt(ms);
+      const full = t + (pausedDec ? dp.dec : "");
+      if(el.textContent !== full){
+        // 桁ごとに分けて描画(▲▼の位置合わせに使う)
+        const [m, ss] = t.split(":");
+        el.innerHTML = '<span class="tg tg-m">'+m+'</span><span class="tg-c">:</span><span class="tg tg-t">'+ss[0]+'</span><span class="tg tg-o">'+ss[1]+'</span>'
+          + (pausedDec ? '<span class="dec">'+dp.dec+'</span>' : '');
+      }
+      el.classList.toggle("long", t.length > 4 || pausedDec);   // 10:00以上・小数付きは少し小さく
     }
-    el.classList.toggle("long", t.length > 4);                 // 10:00以上は少し小さく
     el.classList.toggle("danger", d.running && ms>0 && ms<=10000); // 残り10秒は赤
     if($("d-board").classList.contains("setting")) dPlaceArrows();
   }
@@ -2197,7 +2225,9 @@
   // READY中(そのセットだけ)と一時停止中(残り時間)に、時間を増減(1秒〜60分)
   function dAdjust(delta){
     if(d.suspended){
-      d.remaining = Math.min(60*60*1000, Math.max(1000, d.remaining + delta));
+      // 端数がある場合は、表示中の秒(小数表示中は切り捨て、通常表示は切り上げ)を基準にしてキリのいい秒にする
+      const base = decParts(d.remaining) ? Math.floor(d.remaining/1000)*1000 : Math.ceil(d.remaining/1000)*1000;
+      d.remaining = Math.min(60*60*1000, Math.max(1000, base + delta));
       dShowTime(d.remaining);
       clickTone();
       return;
