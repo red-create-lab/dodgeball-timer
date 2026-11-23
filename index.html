@@ -225,20 +225,21 @@
   }
   #draw-btn:disabled{opacity:.3;border-color:#2C4A6E;color:var(--ink-dim);cursor:not-allowed;}
 
-  #history-list{
+  #history-list,#d-history-list{
     list-style:none;margin:0;padding:0;max-height:52vh;overflow-y:auto;
     display:flex;flex-direction:column-reverse;gap:6px;text-align:left;
   }
-  #history-list li{
+  #history-list li,#d-history-list li{
     display:flex;align-items:center;justify-content:space-between;gap:10px;
     background:var(--bg-panel-2);border-radius:8px;padding:9px 12px;font-size:13px;color:var(--ink-dim);
   }
-  #history-list li b{color:var(--ink);font-weight:700;}
+  #history-list li b,#d-history-list li b{color:var(--ink);font-weight:700;}
   .history-edit-select{
     flex:1;max-width:220px;background:var(--bg-panel);border:1px solid var(--gold);
     color:var(--ink);border-radius:6px;padding:6px 8px;font-size:13px;font-weight:700;
   }
-  #history-list:empty::before{content:"まだセットが行われていません";font-size:13px;color:var(--ink-dim);}
+  #d-stage.single #d-history-open-btn{display:none;} /* 履歴は複数セットマッチのみ */
+  #d-history-list:empty::before,#history-list:empty::before{content:"まだセットが行われていません";font-size:13px;color:var(--ink-dim);}
 
   .ctrl-btn{
     background:var(--bg-panel-2);border:1px solid #2C4A6E;color:var(--ink);
@@ -489,6 +490,15 @@
   .set-controls.adjusting{width:420px;}
   .adj-btn{width:112px;}
   .set-time.adjusted{color:var(--gold-soft);}
+  /* クロスドッジ: 一時停止中のセットタイマー▲▼。数字と▲▼は暗転の手前に出し、PAUSEは上に寄せる */
+  .c-arrows{display:none;}
+  #stage.c-setting .c-arrows{display:block;}
+  #stage.c-setting .c-arrows .d-arrow{z-index:42;}
+  #stage.c-setting .set-time{z-index:41;}
+  #stage.c-setting .set-time.long{font-size:350px;}
+  #stage.c-setting .pause-veil{justify-content:flex-start;padding-top:150px;}
+  #stage.c-setting .pause-text{font-size:150px;}
+  #stage.c-setting .pause-sub{display:none;}
   /* 全体タイマーの増減ボタン(ヘッダー内、READY中だけ表示) */
   .game-clock-hero{display:flex;align-items:center;gap:16px;}
   .adj-btn.game-adj{position:static;height:52px;width:112px;font-size:22px;}
@@ -743,6 +753,15 @@
           </svg>
           <div class="topbar-status" id="set-label">試合開始を待っています</div>
           <div class="set-time num" id="set-time-display">0:00</div>
+          <!-- 一時停止中だけ出す、セットタイマーの▲▼(1分・10秒・1秒) -->
+          <div class="c-arrows" id="c-arrows">
+            <button class="d-arrow up" data-g="m" data-delta="60000" aria-label="1分増やす">▲<small>1分</small></button>
+            <button class="d-arrow up" data-g="t" data-delta="10000" aria-label="10秒増やす">▲<small>10秒</small></button>
+            <button class="d-arrow up" data-g="o" data-delta="1000" aria-label="1秒増やす">▲<small>1秒</small></button>
+            <button class="d-arrow down" data-g="m" data-delta="-60000" aria-label="1分減らす">▼<small>1分</small></button>
+            <button class="d-arrow down" data-g="t" data-delta="-10000" aria-label="10秒減らす">▼<small>10秒</small></button>
+            <button class="d-arrow down" data-g="o" data-delta="-1000" aria-label="1秒減らす">▼<small>1秒</small></button>
+          </div>
           <div class="death-inf" id="death-inf">
         <svg class="inf-svg" viewBox="0 0 600 300" aria-hidden="true">
           <defs><linearGradient id="infGradRing" x1="0" y1="0" x2="1" y2="0">
@@ -856,7 +875,8 @@
       <div class="menu-wrap">
         <button class="icon-btn" id="d-menu-btn" title="メニュー">☰</button>
         <div class="menu-dropdown" id="d-menu-dropdown">
-          <button class="menu-item" id="d-timer-reset-btn" disabled>↺ タイマーをやり直す</button>
+          <button class="menu-item" id="d-history-open-btn">セット履歴を見る(編集可)</button>
+            <button class="menu-item" id="d-timer-reset-btn" disabled>↺ タイマーをやり直す</button>
           <button class="menu-item" id="d-reset-btn">試合をリセット</button>
           <button class="menu-item" id="d-end-btn">試合終了(設定画面に戻る)</button>
         </div>
@@ -946,6 +966,16 @@
   </div>
 </div>
 
+<!-- ドッジボールモード: セット履歴(複数セットマッチ) -->
+<div class="overlay" id="d-history-overlay">
+  <div class="overlay-card wide">
+    <h2>セット履歴</h2>
+    <ul id="d-history-list"></ul>
+    <div class="overlay-actions" style="margin-top:16px;">
+      <button class="ctrl-btn gold" id="d-history-close-btn">閉じる</button>
+    </div>
+  </div>
+</div>
 <!-- History overlay -->
 <div class="overlay" id="history-overlay">
   <div class="overlay-card wide">
@@ -1093,9 +1123,9 @@
   function countTick(d){ return [beep(880,90,"sine",0.28,d)]; }
   // セット残り5〜1秒: 高く鋭い「ピーッ」(目立つ音)
   function countStrong(d){ return [beep(1320,200,"square",0.20,d), beep(660,200,"square",0.10,d)]; }
-  // セット終了(0秒): 試合終了ブザー「ブーーー」
+  // セット終了(0秒): 試合終了ブザー(高いホーン+低い響きの重ね・3秒)。小さいスピーカーでも高い音で聞こえる
   function buzzSetEnd(d){
-    return [beep(220,3000,"sawtooth",0.22,d), beep(233,3000,"sawtooth",0.16,d), beep(110,3000,"square",0.10,d)];
+    return [beep(523,3000,"square",0.12,d), beep(784,3000,"sawtooth",0.08,d), beep(220,3000,"sawtooth",0.14,d), beep(110,3000,"square",0.08,d)];
   }
   // ---------- 効果音ファイル(mp3を埋め込み) ----------
   // 警告音2.mp3: タイブレークを行うか確認するとき / 金属ロゴ表示3.mp3: サドンデス突入の演出
@@ -1271,6 +1301,7 @@
 
   function renderRing(fraction){
     const ring = document.getElementById("ring-fg");
+    fraction = Math.min(1, Math.max(0, fraction)); // 一時停止中に時間を増やしても円がはみ出さないように
     const offset = RING_CIRC * (1-fraction);
     ring.setAttribute("stroke-dashoffset", offset.toFixed(1));
     if(fraction <= 0.15){ ring.classList.add("danger"); } else { ring.classList.remove("danger"); }
@@ -1328,7 +1359,8 @@
     if(state.phase==="sudden") return {duration: state.suddenDurationMs, isFinal:true};
     if(!state.useGameClock) return {duration: state.setDurationMs, isFinal:false};
     const remaining = state.gameRemainingMs;
-    if(!state.finalRuleEnabled) return {duration: state.setDurationMs, isFinal:false};
+    // 短縮ルールOFF: 最終セットの判定はするが、時間は短縮しない(残りがセットタイム以下ならその回が最終セット)
+    if(!state.finalRuleEnabled) return {duration: state.setDurationMs, isFinal: remaining <= state.setDurationMs};
     if(remaining > state.setDurationMs) return {duration: state.setDurationMs, isFinal:false};
     if(remaining >= state.finalThresholdMs) return {duration: state.setDurationMs, isFinal:true};
     return {duration: state.finalShortMs, isFinal:true};
@@ -1925,6 +1957,58 @@
     }
     syncPauseButtons();
   }
+  // ---- 一時停止中のセットタイマー▲▼(ドッジボールモードと同じ: 1分・10秒・1秒) ----
+  function cAdjOn(){
+    return state.suspended && state.suspendedWasSetTicking && !state.suspendedWasDeath && state.phase!=="death";
+  }
+  // 一時停止中の表示: 桁ごとに分けて描画(残り10秒未満で端数があれば「0:07.23」)
+  function cShowPausedSet(){
+    const el = document.getElementById("set-time-display"), ms = state.setRemainingMs;
+    const dp = decParts(ms);
+    const pausedDec = !!dp && ms % 1000 !== 0;
+    const t = pausedDec ? "0:0" + dp.sec : fmt(ms);
+    const full = t + (pausedDec ? dp.dec : "");
+    if(el.textContent !== full || !el.querySelector(".tg-m")){
+      const [m, ss] = t.split(":");
+      el.innerHTML = '<span class="tg tg-m">'+m+'</span><span class="tg-c">:</span><span class="tg tg-t">'+ss[0]+'</span><span class="tg tg-o">'+ss[1]+'</span>'
+        + (pausedDec ? '<span class="dec">'+dp.dec+'</span>' : '');
+    }
+    el.classList.toggle("long", t.length > 4 || pausedDec); // 10:00以上・小数付きは少し小さく
+    cPlaceArrows();
+  }
+  function cPlaceArrows(){
+    const el = document.getElementById("set-time-display");
+    const F = parseFloat(getComputedStyle(el).fontSize);
+    const cy = el.offsetTop + el.offsetHeight/2, half = 0.374*F;
+    const pos = { m: el.querySelector(".tg-m"), t: el.querySelector(".tg-t"), o: el.querySelector(".tg-o") };
+    document.querySelectorAll("#c-arrows .d-arrow").forEach(btn=>{
+      const g = pos[btn.dataset.g]; if(!g) return;
+      btn.style.left = (el.offsetLeft + g.offsetLeft + g.offsetWidth/2) + "px";
+      btn.style.top = btn.classList.contains("up") ? (cy - half - 62 - 12) + "px" : (cy + half + 10) + "px";
+    });
+  }
+  function cAdjust(delta){
+    if(!cAdjOn()) return;
+    const r = state.setRemainingMs;
+    // 端数がある場合は、表示中の秒(小数表示中は切り捨て、通常表示は切り上げ)を基準にしてキリのいい秒にする
+    const base = decParts(r) ? Math.floor(r/1000)*1000 : Math.ceil(r/1000)*1000;
+    state.setRemainingMs = Math.min(60*60*1000, Math.max(1000, base + delta));
+    state.lastCountdownSec = null;
+    renderRing(state.setTotalMs>0 ? state.setRemainingMs/state.setTotalMs : 0);
+    cShowPausedSet();
+    clickTone();
+  }
+  document.querySelectorAll("#c-arrows .d-arrow").forEach(btn=>{
+    btn.addEventListener("click", ()=> cAdjust(parseInt(btn.dataset.delta,10)));
+  });
+  let cWasSetting = false;
+  function syncCrossArrows(){
+    const on = cAdjOn();
+    document.getElementById("stage").classList.toggle("c-setting", on);
+    if(on) cShowPausedSet();                           // 一時停止中は桁ごとの表示(メニューのやり直し後も追従)
+    if(!on && cWasSetting) document.getElementById("set-time-display").classList.remove("long");
+    cWasSetting = on;
+  }
   // セット中(タイブレーク・サドンデス含む)か、その一時停止中か
   function setPauseLive(){
     return state.running || state.deathTicking ||
@@ -1963,6 +2047,7 @@
     mainEl.classList.toggle("intro-on", document.getElementById("death-intro").classList.contains("active"));
     document.getElementById("court-change-btn").disabled = (state.running || state.gameTicking || state.deathTicking);
     syncPauseButtons();
+    syncCrossArrows();
     if(state.setReady && !state.setActive){ renderPreparedSet(); }
     const adjOn = state.setReady && !state.setActive && state.phase!=="death";
     ["set-minus","set-plus"].forEach(id=> document.getElementById(id).classList.toggle("show", adjOn));
@@ -2103,6 +2188,40 @@
   // 「試合 (5:00)」「セット 1 (5:00)」のような表記は出さない(時間は大きな数字、セット数はヘッダーで分かるため)
   function dLabelForSet(n, ms){ return ""; }
 
+  // セット履歴: 結果を選び直すと、取ったセット数を履歴から数え直す
+  function dRenderHistory(){
+    const list = $("d-history-list");
+    list.innerHTML = "";
+    d.history.forEach((h, idx)=>{
+      const li = document.createElement("li");
+      const label = document.createElement("span"); label.textContent = "第" + h.set + "セット";
+      const sel = document.createElement("select"); sel.className = "history-edit-select"; sel.dataset.idx = idx;
+      [["A", d.teamA + " WIN"], ["DRAW", "引き分け"], ["B", d.teamB + " WIN"]].forEach(([v, t])=>{
+        const o = document.createElement("option"); o.value = v; o.textContent = t; if(v===h.result) o.selected = true; sel.appendChild(o);
+      });
+      const el = document.createElement("span"); el.textContent = h.elapsed || "";
+      li.appendChild(label); li.appendChild(sel); li.appendChild(el);
+      list.appendChild(li);
+    });
+  }
+  function dRecomputeScores(){
+    d.scoreA = d.history.filter(h=>h.result==="A").length;
+    d.scoreB = d.history.filter(h=>h.result==="B").length;
+    dRenderScores();
+    if(d.matchOver) dSetLabel(dResultText()); // 試合終了後に直した場合は結果表示も更新
+  }
+  $("d-history-list").addEventListener("change", (e)=>{
+    if(!e.target.classList.contains("history-edit-select")) return;
+    const h = d.history[parseInt(e.target.dataset.idx,10)];
+    if(!h) return;
+    h.result = e.target.value;
+    dRecomputeScores();
+  });
+  $("d-history-open-btn").addEventListener("click", ()=>{
+    dCloseMenu(); dRenderHistory(); $("d-history-overlay").classList.add("active");
+  });
+  $("d-history-close-btn").addEventListener("click", ()=> $("d-history-overlay").classList.remove("active"));
+
   function dResetMatch(){
     cancelScheduledSounds();
     Object.assign(d, { setNumber:0, scoreA:0, scoreB:0, history:[], ready:false, overrideMs:null, setActive:false,
@@ -2186,17 +2305,21 @@
     d.running = false; d.setActive = false; d.awaiting = false; d.suspended = false;
     $("d-veil").classList.remove("active");
     if(result==="A") d.scoreA += 1; else if(result==="B") d.scoreB += 1;
-    d.history.push({ set:d.setNumber, result });
+    d.history.push({ set:d.setNumber, result, elapsed: fmt(d.total - Math.max(d.remaining,0)) });
     dRenderScores();
+    dRenderHistory();
     dWinButtons(false);
     dShowTime(0);
     dSetLabel("セット待機中");
     dSetStart("READY","ready",false);
   }
+  function dResultText(){
+    const res = d.scoreA===d.scoreB ? "引き分け" : ((d.scoreA>d.scoreB ? d.teamA : d.teamB) + " WIN");
+    return "試合終了 — " + res + " (" + d.scoreA + "-" + d.scoreB + ")";
+  }
   function dFinishMatch(){
     d.matchOver = true;
-    const res = d.scoreA===d.scoreB ? "引き分け" : ((d.scoreA>d.scoreB ? d.teamA : d.teamB) + " WIN");
-    dSetLabel("試合終了 — " + res + " (" + d.scoreA + "-" + d.scoreB + ")");
+    dSetLabel(dResultText());
     dSetStart("試合終了","go",true);
     buzzHalfEnd();
   }
