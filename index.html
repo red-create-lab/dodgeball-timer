@@ -418,6 +418,26 @@
   .st-list li{display:flex;align-items:center;gap:14px;background:var(--bg-panel-2);border-radius:10px;padding:11px 14px;}
   .st-list .st-name{flex:1;font-size:15px;font-weight:700;}
   .st-list .st-name small{display:block;font-size:12px;font-weight:400;color:var(--ink-dim);margin-top:2px;}
+  /* ---------- アップデート履歴 ---------- */
+  .mode-tools{display:flex;gap:12px;justify-content:center;flex-wrap:wrap;margin-top:26px;}
+  .mode-tools .st-open-btn{margin-top:0;}
+  .ver-tag{display:inline-block;background:var(--gold);color:#20140A;font-size:12px;font-weight:900;padding:2px 8px;border-radius:999px;margin-left:2px;}
+  #cl-overlay .overlay-card{max-width:760px;width:100%;text-align:left;padding:26px 28px;max-height:86vh;display:flex;flex-direction:column;}
+  #cl-overlay h2{text-align:center;font-size:24px;margin:0 0 4px;}
+  #cl-overlay .cl-lead{text-align:center;color:var(--ink-dim);font-size:13px;margin:0 0 14px;}
+  .cl-list{overflow-y:auto;flex:1;padding-right:4px;}
+  .cl-ver{border:1px solid #2C4A6E;border-radius:10px;margin-bottom:8px;background:var(--bg-panel-2);}
+  .cl-ver summary{cursor:pointer;list-style:none;display:flex;align-items:center;gap:10px;padding:11px 14px;font-weight:800;font-size:16px;}
+  .cl-ver summary::-webkit-details-marker{display:none;}
+  .cl-ver summary::before{content:"▶";color:var(--gold);font-size:11px;transition:transform .15s;}
+  .cl-ver[open] summary::before{transform:rotate(90deg);}
+  .cl-ver summary .cl-date{color:var(--ink-dim);font-weight:400;font-size:13px;margin-left:auto;}
+  .cl-ver summary .cl-new{background:#FF3B30;color:#fff;font-size:11px;font-weight:900;padding:2px 8px;border-radius:999px;}
+  .cl-ver ul{margin:0;padding:0 16px 12px 34px;}
+  .cl-ver li{font-size:13.5px;line-height:1.65;color:var(--ink);margin:4px 0;}
+  .cl-ver p.cl-note{margin:0 16px 6px;font-size:12.5px;color:var(--gold-soft);}
+  .cl-tag{display:inline-block;font-size:11px;font-weight:800;padding:0 7px;border-radius:5px;margin-right:4px;vertical-align:1px;background:#2C4A6E;color:var(--ink);}
+  .cl-tag.new{background:#1A5C3A;color:#BFF0D2;} .cl-tag.fix{background:#8B2020;color:#FFD6D0;} .cl-tag.chg{background:#5A4712;color:#F5E3A8;}
   .st-note{font-size:12.5px;color:var(--ink-dim);margin:14px 0 0;line-height:1.6;}
   /* 設定画面の「モード選択に戻る」: 見落とさないよう枠付きのボタンにする */
   .back-link{display:inline-flex;align-items:center;gap:6px;background:rgba(201,168,76,.08);border:1px solid var(--gold);
@@ -556,6 +576,41 @@
   .game-clock-hero{position:absolute;left:50%;top:6px;transform:translateX(-50%);padding:0;background:none;z-index:46;}
   .game-clock-big{line-height:1;}
   .topbar{min-height:116px;}
+
+  /* ===== 円のインジケーター廃止・タイマー拡大 ===== */
+  .score-white-gold{}
+  .team-panel.a .team-score,.team-panel.b .team-score{color:#F5F1E6;-webkit-text-stroke:8px #C9A84C;paint-order:stroke fill;}
+  .topbar{min-height:116px;}
+
+  .adj-btn.game-adj{height:64px;}
+  .team-side{width:300px;}
+  .team-score{font-size:270px;margin:0 0 10px;}
+  .team-score.two{font-size:190px;line-height:1.42;} /* 2桁は小さく(枠の高さは変えない) */
+  .set-timer-wrap{width:calc(1920px - 600px - 72px - 48px);}
+  .ring-box{--F:600px;width:100%;height:calc(1080px - 116px - 40px);}
+  .ring-box > svg{display:none;}
+  .set-time{font-size:var(--F);}
+  .ring-box .topbar-status{bottom:calc(50% + var(--F) * .40 + 6px);width:90%;}
+  .set-controls{top:calc(50% + var(--F) * .42 + 4px);}
+  /* 円がない分、残り10秒以下はセットタイマーの数字を赤に */
+  .set-time.danger{color:var(--danger);}
+  #stage.c-setting .pause-veil{padding-top:262px;}
+  #stage.c-setting .pause-text{font-size:116px;}
+  .set-time.wide{font-size:calc(var(--F) * .74);} /* 10:00以上は少し小さく */
+
+
+  /* 一時停止ボタン(クロスドッジ): ひと目で分かるようアンバー(黄橙)で塗る。再開は従来どおり赤 */
+  #start-set-btn.pause-mode{background:#F2A93B;border:2px solid #F2A93B;color:#1A1206;font-weight:900;}
+  #start-set-btn.pause-mode:hover{background:#FFB84D;}
+  #pause-btn.pause-pill:not(.resume):not(:disabled){background:#F2A93B;border-color:#F2A93B;color:#1A1206;font-weight:900;}
+  #game-clock-display.set-count{font-weight:800;font-size:150px;padding:20px 0 14px;} /* 全体タイマーなし: 土台のセット数を太字に */
+  /* 全体タイマーは帯の上に載せた土台(カプセル)に表示。帯は細いまま */
+  .game-clock-hero{top:14px;background:var(--bg-panel);border:3px solid var(--gold);border-radius:999px;
+    padding:4px 46px 10px;box-shadow:0 10px 28px rgba(0,0,0,.45);}
+  .game-clock-big{font-size:210px;line-height:1;}
+  .ring-box{top:44px;} /* セットタイマー〜ボタンをまとめて下へ */
+  .adj-btn.game-adj{height:60px;}
+  .ring-box .topbar-status{bottom:calc(50% + var(--F) * .40 - 4px);}
 </style>
 </head>
 <body>
@@ -585,7 +640,10 @@
           <span class="mode-card-go">このモードで始める →</span>
         </button>
       </div>
-      <button class="st-open-btn" id="st-open-btn" type="button">🔊 サウンドテスト <small>会場で音の聞こえ方を確認</small></button>
+      <div class="mode-tools">
+        <button class="st-open-btn" id="st-open-btn" type="button">🔊 サウンドテスト <small>会場で音の聞こえ方を確認</small></button>
+        <button class="st-open-btn" id="cl-open-btn" type="button">📝 アップデート履歴 <span class="ver-tag" id="cl-ver-tag"></span></button>
+      </div>
       <div class="credit setup-credit mode-credit">Produced by <b>RED Create Lab</b></div>
     </div>
   </section>
@@ -773,7 +831,7 @@
       </div>
       <button class="cc-btn" id="court-change-btn" title="タイマー停止中に左右のチームを入れ替えます">⇄ コートチェンジ</button>
       <div class="half-pill" id="half-label">前半</div>
-      <button class="cc-btn pause-pill" id="pause-btn" title="一時停止 / 再開" disabled>一時停止</button>
+      <button class="cc-btn pause-pill" id="pause-btn" title="一時停止 / 再開" disabled>❚❚ 一時停止</button>
       <div class="menu-wrap">
         <button class="icon-btn" id="menu-btn" title="メニュー">☰</button>
         <div class="menu-dropdown" id="menu-dropdown">
@@ -1064,6 +1122,221 @@
     </div>
   </div>
 </div>
+<!-- アップデート履歴 -->
+<div class="overlay" id="cl-overlay">
+  <div class="overlay-card">
+    <h2>📝 アップデート履歴</h2>
+    <p class="cl-lead">これまでの更新内容です。バージョンを押すと詳しく見られます。</p>
+    <div class="cl-list" id="cl-list"></div>
+    <div class="overlay-actions" style="margin-top:14px;">
+      <button class="ctrl-btn gold" id="cl-close-btn" type="button">閉じる</button>
+    </div>
+  </div>
+</div>
+<script type="text/plain" id="changelog-src"># 変更履歴 (クロスドッジボール タイマー)
+
+## v4.9 (2026-11-25)
+※ クロスドッジボールモードのみの変更。ドッジボールモードは変更なし
+- 【表示変更】スコアを白文字＋濃い金色の太い縁取りに変更(青・赤は暗く見えにくかったため)。1桁は270pxに拡大し、2桁(10点以上)は自動で190pxに縮小
+- 【表示変更】円のインジケーターを廃止。代わりにカウント中の残り10秒以下はセットタイマーの数字を赤で表示
+- 【表示変更】全体タイマーを細い帯の上に載せた金縁の土台に表示し、210pxに拡大(従来112px)。READY中の±30秒ボタンも土台の中に表示
+- 【表示変更】セットタイマーを600pxに拡大(従来480px)。左右のチーム枠を細くし、SET表示〜ボタンを少し下に移動。10:00以上は数字を少し小さく表示
+- 【表示変更】一時停止ボタンをアンバー(黄橙)で塗り「❚❚ 一時停止」と表示(ヘッダーの一時停止ボタンも同様)。再開は従来どおり赤
+- 全体タイマーなしの場合: 土台のセット数を太字に。下の表示はREADY中「次のセット 3:00」、セット中は空にしてセット数の重複をなくした
+- 【新機能】モード選択画面に「📝 アップデート履歴」を追加。これまでの更新内容をバージョンごとに確認できる
+
+## v4.8 (2026-11-23)
+- 【新機能】サウンドテスト: モード選択画面に「🔊 サウンドテスト」を追加。試合と同じ音だけを鳴らして会場での聞こえ方を確認できる(残り10秒から0秒のブザーまで通し再生・停止、カウント音2種・終了ブザー・前後半終了の音・タイブレーク警告音・サドンデス突入の音を個別再生)。タイマーの状態には影響しない
+- 【新機能】クロスドッジボールモード: 最終セット短縮ルールに「残りが少なければ打ち切る」を追加(初期値OFF・1:00)。セット終了時の全体タイマーの残りが設定値未満なら、次のセットを行わずに前半(試合)を終える。打ち切り時は「前半終了(残り1:00未満)」と表示し、セットタイマーは0:00にする。後半で打ち切り・同点ならタイブレークの確認を出す
+- 【挙動変更】クロスドッジボールモード: 次のセット(通常/最終セット/時間)の判定を、READYを押した時点ではなく「直前のセットが終わった瞬間」の全体タイマーの残りで行うように変更。途中決着は判定ボタンを押した瞬間、時間切れはセットタイマーが0になった瞬間の残りを使う(READYを遅らせても結果が変わらない)。前後半の最初のセットは現在の残りで判定。READY中の全体タイマー±30秒は判定にも反映、ゲームタイマーのやり直しで記録をリセット
+- 設定画面に、今の設定で「セット終了時の全体タイマー → 次のセット」がどうなるかの早見表(表形式)を追加。数値を変えると連動して更新
+
+## v4.7 (2026-11-23)
+※ クロスドッジボールモードのみの変更。ドッジボールモードは変更なし
+- 【新機能】セット中(タイブレーク含む)に一時停止すると、セットタイマーの数字の上下に▲▼ボタン(1分・10秒・1秒)を表示し、残り時間を増減できるようにした(ドッジボールモードと同じ操作)。数字と▲▼は暗転の手前に表示し、PAUSEの文字は上に寄せる
+- 残り10秒未満で一時停止した場合は「0:07.22」のように小数のまま表示し、▲▼を押すと端数を切り捨ててキリのいい秒になる
+- セット間の一時停止中(全体タイマーのみ停止)とサドンデス中は▲▼を表示しない。全体タイマーは▲▼の影響を受けない。READY中の±30秒ボタンは従来どおり
+
+## v4.6 (2026-11-20)
+- 【新機能】ドッジボールモード(複数セットマッチ): メニューに「セット履歴を見る(編集可)」を追加。各セットの結果(WIN / 引き分け)を選び直すと、取ったセット数を数え直す。試合終了後に直した場合は結果表示(試合終了 — ○○ WIN (2-1))も更新。1セットのときはメニューに表示しない
+- 【不具合修正】クロスドッジボールモード: 「最終セット短縮ルール」をOFFにすると、全体タイマーが0:00になっても前半・試合が自動で終わらなかった問題を修正。OFFのときも、READY時点で全体タイマーの残りがセットタイム以下なら最終セット(FINAL SET・通常の時間)とし、その判定で前半・試合が終わる。ONのときの動きは従来どおり
+
+## v4.5 (2026-11-19)
+- 【音の変更】両モード共通: 0秒の終了ブザーを、低いブザー(110〜233Hz)から「高いホーン(約520〜780Hz)+低い響き」を重ねた音に変更(3秒)。小さいスピーカーや騒がしい会場でも聞こえやすくした。鳴るタイミング・一時停止時の停止は従来どおり
+
+## v4.4 (2026-11-19)
+- 【新機能】両モード共通: 残り10秒未満のカウント中は、タイマーを小数点以下2桁まで表示(9.99 → 0.01)。小数部分は半分の大きさで、高速で変わる数字で切迫感を演出。カウント音・ブザーは「9.00」…「0.00」の瞬間に鳴る(音のタイミングは従来どおり)。クロスドッジボールモードはセットタイマーのみ(全体タイマーは従来どおり)
+- 一時停止中も小数のまま表示。ドッジボールモードの一時停止中は「0:07.14」のように表示し、▲▼で時間を変えると端数を切り捨ててキリのいい秒になる(例: 0:07.14 → ▲1秒で 0:08、▼1秒で 0:06)
+- 時間切れ時の表示は従来どおり「0:00」
+
+## v4.3 (2026-11-19)
+※ クロスドッジボールモードのみの変更。ドッジボールモードは変更なし
+- 【挙動変更】セット中(タイブレーク・サドンデス含む)は、中央の「セット進行中」ボタンを「一時停止」ボタンに変更。一時停止中は赤い「▶ 再開」になり、暗転画面の上から押せる(一時停止中はDRAWを非表示)
+- 【挙動変更】ヘッダー右上の一時停止ボタンは、セット間で全体タイマーだけが動いている時のみ表示(セット中・試合開始前・前後半終了後は非表示)
+- 【表示変更】タイマー上部のセット表記を英語に変更(セット n → SET n、最終セット → FINAL SET、タイブレーク → TIE BREAK)。時間の併記はREADY中のみ(例: SET 2 (3:00))で、セット進行中は「SET 2」のみ表示
+- 「セット待機中」「判定を選んでください」などの状況表示は従来どおり
+
+## v4.2 (2026-11-18)
+- 両モードの設定画面にある「← モード選択に戻る」を、小さな文字リンクから金色の枠付きボタンに変更(見落とし防止)。見た目のみの変更で、動作・その他の画面は変更なし
+
+## v4.1 (2026-11-18)
+※ ドッジボールモードのみの変更。クロスドッジボールモードは変更なし
+- 【画面変更】ドッジボールモードのタイマー画面をX字配置に変更。円形インジケーターを廃止し、ロゴを左右上、チーム名を左右下に配置。中央のタイマー数字を可能な限り大きく表示(複数セット時はチーム名の下に取得セット数)
+- 【挙動変更】STARTを押すとボタンが「一時停止」に変わり、押すと一時停止(「▶ 再開」で再開)。ヘッダー右上の一時停止ボタンは廃止
+- 【新機能】±30秒ボタンを廃止し、各桁の上下に▲▼ボタンを追加(分の位=1分、10秒の位=10秒、1秒の位=1秒ずつ増減)。タイマーが動いていない時(試合開始前のREADY中・一時停止中)だけ表示
+- 1セットの一時停止中は「▶ 再開」と「この試合を終了」を横並びに表示(▼ボタンと重ならないように)。一時停止中はDRAWボタンを非表示
+- タイマー上部の「試合 (5:00)」「セット 1 (5:00)」表記を削除(TIME UP・判定を選んでください・試合結果などの状況表示は残す)
+- 制作者クレジットを画面下中央に移動
+
+## v4.0 (2026-11-18)
+- 【新機能】起動時の入口にモード選択画面を追加。「クロスドッジボールモード」(従来の機能すべて)と「ドッジボールモード」を選択できる。各設定画面に「← モード選択に戻る」を追加
+- 【新機能】ドッジボールモードを追加(クロスドッジボールモードとは独立した画面・処理)
+  - 設定: チーム名、ロゴ画像(任意)、試合時間(初期値5:00)、複数セットマッチ(ON/OFF)
+  - 1セット(初期設定): チーム名・ロゴとタイマーのみ(スコア無し)。READY→STARTで開始し、試合中は「STOP」ボタンで途中終了可能。時間切れで「TIME UP」+終了ブザー。終了後は再びREADYで次の試合を開始できる
+  - 複数セットマッチ: ヘッダーにセット数(SET n)、チームの下に取得セット数をスコア表示。セットごとにWIN/DRAWを入力。セット間の「試合終了」ボタン(確認ポップアップ付き)で試合を終了し、勝者とセットスコアを表示
+  - クロスドッジボールモードから引き継いだ機能: 一時停止(PAUSE画面)、残り10秒からのカウント音・終了ブザー、コートチェンジ、READY後の±30秒、メニュー(タイマーをやり直す/試合をリセット/試合終了)
+- ファイル名は従来どおり(クロスドッジボールタイマー_vX.X.html)。中身は両モードを含む
+
+## v3.5 (2026-11-18)
+- 【新機能】全体タイマー無しモード(セットタイマーのみ)を追加。設定画面の「全体タイマーを使う」をOFFにすると有効(初期値はON=従来どおり)。OFF時はゲームタイム・最終セット短縮ルール・セット間もゲームタイムを進める、の設定項目を非表示
+  - ヘッダー中央に全体タイマーの代わりにセット数(SET 1, SET 2…)を表示
+  - セット間(スコア入力後・READY後)に、DRAWボタンの位置へ「前半終了」(後半/1ゲームの場合は「試合終了」)ボタンを表示。確認ポップアップの後、従来どおり後半へ進む流れ/試合終了(同点ならタイブレークの確認)につながる
+  - 前後半あり・なしの両方に対応。全体タイマーの増減ボタンとメニューの「ゲームタイマーをやり直す」はこのモードでは無効
+
+## v3.4 (2026-11-18)
+- 制作者クレジット「Produced by RED Create Lab」を追加(試合画面の右下、設定画面の「この内容で試合を開始」ボタンの下に小さく表示)
+
+## v3.3 (2026-11-18)
+- 【新機能】READY中(START待ち)に、ヘッダーの全体タイマーの左右に「−30秒」「＋30秒」ボタンを表示し、全体タイマーを30秒単位で増減できるように(0:00〜99:30)。セット間も全体タイマーが進む設定で動いている最中でも増減可能。残り時間の変更に合わせて最終セットの判定・表示も自動で更新
+- 一時停止ボタンをアイコン(⏸/▶)から文字表記に変更。通常時は「一時停止」、一時停止中は赤い「▶ 再開」
+- 【挙動変更】メニューの「試合をリセット」を、設定画面に戻すのではなく、進行中の試合の全体タイマー・セットタイマー・スコア・セット履歴を試合開始前(前半・READY待ち)の状態に戻す動作に変更。チーム名・ロゴ・設定はそのまま。確認ポップアップ付き。一時停止・タイブレーク・サドンデス中でもリセット可能。コートチェンジした左右は元の並びに戻る
+- 【新機能】メニューに「試合終了(設定画面に戻る)」を追加(確認ポップアップ付き)。設定画面ではチーム名・時間・点数などの入力内容とロゴが残っているので、変更して次の試合を始められる
+
+## v3.2 (2026-11-15)
+- 【新機能】READYを押した後(START待ち)に、STARTボタンの左右に「−30秒」「＋30秒」ボタンを表示。そのセットの時間を30秒単位で増減できる(0:30〜10:00)。設定と違う時間にした場合はセットタイマーの数字をゴールドで表示。変更はそのセットだけで、次のセットは設定画面の時間に戻る。タイブレークでも使用可能
+- 表示の改善: 画面と設計図の縦横比の差で左右(または上下)にできていた帯を、隣接する色で塗りつぶすように変更(ヘッダーの紺色・金線を画面端まで延長、PAUSE画面・∞演出の暗い背景も画面端まで)。タイマー・カード・ボタン等の大きさや配置は変更なし
+
+## v3.1 (2026-10-30)
+- 名称を変更: 「サドンデス」(時間を決めて行う延長戦)→「タイブレーク」(表示: TIE BREAK)、「デスマッチ」(時間無制限)→「サドンデス」(表示: SUDDEN DEATH)。確認画面・注意書き・ヘッダー表示・演出画面・セット履歴の表記すべてに反映
+
+## v3.0 (2026-10-28)
+- 【新機能】サドンデス / デスマッチ
+  - 試合終了時(1ゲーム終了 または 後半終了)にスコアが同点の場合、「サドンデスを行いますか？」の確認画面を表示(警告音付き)。サドンデスの時間を30秒単位で設定可能(30秒〜10分、初期値1:00)。「決着がつかなかった場合は時間無制限のデスマッチで決着がつくまで行う」旨の注意書きを表示。「行わない」を選ぶと引き分けで試合終了
+  - サドンデス中はヘッダーに「SUDDEN DEATH」、リングを赤で表示。READY→STARTで開始し、WIN/Perfectで決着すると試合終了(ヘッダーに「GAME SET」、中央に勝者を表示)
+  - 時間切れなどで決着しない場合は「DRAW → ∞」ボタンでデスマッチへ。突入時は画面全体に光る∞マークと「DEATH MATCH」の演出画面を表示(効果音付き、約4.5秒またはクリックで閉じる)
+  - デスマッチ中はリング内に∞マークと経過時間(カウントアップ)を表示。WIN/Perfectで決着すると試合終了。中断中は経過時間も停止
+  - サドンデス・デスマッチの勝利にもWIN/Perfectの点数を加算し、セット履歴に「サドンデス」「デスマッチ」として記録(後から修正可能)
+- 効果音ファイル(警告音2.mp3 / 金属ロゴ表示3.mp3)をHTML内に埋め込み。ファイル1つ・オフラインのまま動作
+
+## v2.9 (2026-10-28)
+- 【レイアウト変更】全体(ゲーム)タイマーをヘッダー内(中央)に移動して小さく表示(285px→112px)し、空いたスペースでセットタイマーを最大化(320px→480px、リング790px→985px)。数字はリングにかぶる大きさ
+- 「セット 1 (3:00)」表示とSTART/DRAWボタンの位置を、大きくなった数字に合わせて調整
+- DRAWボタンの幅を狭くし(約半分)、STARTボタンの下・中央に配置。リング下側の丸みに沿う2段構成に
+- 【不具合修正】残り10秒からのカウント音・終了ブザーが、表示の秒の切り替わりとずれる問題を修正。表示の切り替わり時刻を計算して音を予約する方式に変更し、誤差0msで1秒間隔に鳴るように。表示の更新間隔も0.1秒→0.025秒に短縮し、数字の切り替わりと音を一致させた
+- 鳴る直前に中断した場合やセット終了直前に決着した場合は、予約済みの音を取り消すように(鳴り始めている終了ブザーは止めない)
+
+## v2.8 (2026-10-28)
+- 【不具合修正】ハンバーガーメニュー(☰)の項目(セット履歴を見る・セットタイマーをやり直す・ゲームタイマーをやり直す・試合をリセット)を押しても反応しない不具合を修正(v2.5で中断画面用にヘッダーの重なり順を変えた影響で、メニューを閉じるための透明な背景がメニューの上に重なっていたため)
+- 【挙動変更】前半/後半の最初のセットも「READY」→「START」の2段階に変更。READYを押すとセットタイマーに1セット目の時間が表示され、STARTでゲームタイマーとセットタイマーが同時にスタートする(従来の「前半スタート」「後半スタート」ボタンを置き換え)
+
+## v2.7 (2026-10-28)
+- 【新機能】ハンバーガーメニュー(☰)に「↺ セットタイマーをやり直す」「↺ ゲームタイマーをやり直す」を追加。押すと確認ポップアップが出て、「やり直す」を選んだときだけ適用。スコア・セット履歴・もう一方のタイマーは変わらない
+  - セットタイマー: 進行中のセットの残り時間を最初の時間に戻す(判定待ち中なら判定待ちを解除して再スタート、中断中なら再開時に最初の時間から開始)
+  - ゲームタイマー: 現在の前半/後半のゲームタイムを最初の時間に戻す
+  - 中断中(PAUSE画面)でもメニューから操作可能
+- 【挙動変更】スコア確定後の次セット開始を2段階に変更。スコアを入れると「READY」(ゴールド)ボタンになり、押すとセットタイマーが次のセットの時間に戻って「START」(緑)に切り替わり、STARTを押すとカウント開始。次が最終セットの場合はREADY時点で短縮後の時間を表示(待機中に基準時間を切った場合も表示が自動で切り替わる)
+- 確認ポップアップとメニューの文字・ボタンを大画面向けに拡大
+
+## v2.6 (2026-10-28)
+- 【新機能】セットタイマー残り10〜6秒で毎秒カウント音(軽い「ピッ」)、残り5〜1秒で毎秒強いカウント音(高く鋭い「ピーッ」)を鳴らすように追加。中断→再開しても同じ秒の音が二重に鳴らないよう制御
+- セットタイマー0秒の音を、短い「ブッブッ」から約3秒の終了ブザー「ブーーー」に変更
+- 効果音の終わりを短くフェードさせ、音の切れ際の「プツッ」というノイズを軽減
+
+## v2.5 (2026-10-28)
+- 【表示拡大】24〜27インチモニタでの使用を想定し、全体を拡大(スコア124px→240px、チーム名14px→40px、ゲームタイマー180px→285px、セットタイマー225px→320px、WIN/Perfectボタン・ヘッダー表示も拡大)。左右の余白を使ってスコアカード・ロゴカードの幅も拡大
+- セットタイマーのリングを細くし、その分リングと数字を大きく表示
+- 「セット 1 (3:00)」などの進行状況表示を、ヘッダーからセットタイマー(リング内の数字の上)に移動
+- 「セット開始」ボタンと引き分けボタンをリングの内側下部に縦並びで配置。引き分けボタンの表記を「引き分け(人数同数)」→「DRAW」に変更
+- 一部の進行状況の文言を短縮(「前半終了 — ボタンを押して後半へ進んでください」→「前半終了」、「判定を選んでください(WIN or 引き分け)」→「判定を選んでください」)
+- 【新機能】ヘッダーに「⇄ コートチェンジ」ボタンを常設。押すと左右のチーム(名前・スコア・ロゴ・ボタン)が入れ替わる。タイマーが止まっているとき(開始前・中断中・前半終了後など)のみ押せる
+- 【新機能】後半へ進むときに「コートチェンジしますか？」と確認するように変更(「コートチェンジする」/「しない」を選択)
+- 【新機能】中断中は画面(ヘッダー以外)を暗くし、中央に赤字で「PAUSE」、その下に黄色で「PRESS ▶ TO RESUME」を表示。中断中もヘッダーの再開・コートチェンジ・メニューは操作可能
+
+## v2.4 (2026-10-21)
+- 【新機能】設定画面に「セット間もゲームタイムを進める」トグルを追加(デフォルトON)。ONの場合、セットとセットの間もゲームタイムが止まらず進み続ける。OFFの場合は従来通りセットが終わるとゲームタイムも止まる
+- 【新機能】一時停止ボタンを「中断/再開」ボタンに変更。セット中・セット間・判定待ちのどのタイミングで押しても、ゲームタイム・セットタイムの両方を同時に止めて再開できるようになり、審判協議などによる完全中断に対応
+- 【新機能】セット履歴を常に編集可能に変更。「セット履歴を見る」から開く画面で、各セットの判定をプルダウンで選び直すとスコアが自動で再計算される(次のセットに進んだ後でも修正可能)。これに伴い、従来の「直前の判定を取り消す」ボタンは廃止(履歴編集に統合)
+- 【新機能】設定画面に「完全勝利ルールを使う」トグルを追加。ONにするとチームごとに「Perfect」「WIN」の2段階ボタンが表示され、完全勝利・勝利・引き分けそれぞれの加点を自由に設定可能(デフォルト: 完全勝利3点/勝利2点/引き分け1点)。OFFの場合は従来通りWINボタン1つのみ
+- 【不具合修正】設定画面の下にスクロールすると、本来非表示のはずのタイマー画面が見えてしまう不具合を修正(v2.2から潜在していたCSSの指定順序の問題。設定項目が増えたことで表面化)
+- 【挙動変更】「前半/後半スタート」ボタンを押すと、全体タイマーだけでなく1セット目のセットタイマーも同時にスタートするよう変更。従来は2回ボタンを押す必要があり(全体タイマー開始→セット開始)、押し忘れの懸念があったため
+
+## v2.3 (2026-10-21)
+- チームロゴの表示方法を変更。スコアカードの中(またはカード内の小さな枠)ではなく、スコアカードとは別の独立したカードとして、その上に配置
+- ロゴ画像は常に全体が表示されるよう調整(object-fit: contain)。画像の縦横比によって左右・上下が切れていた問題を解消
+
+## v2.2 (2026-10-21)
+- 【重要】タイマー画面の表示方式を変更。固定デザイン(幅1920pxの仮想キャンバス)で描画し、実際にブラウザで使える表示領域を検出して自動で縮小/拡大・中央表示する仕組みに変更。ウィンドウサイズやブラウザのツールバー量によって表示が崩れたり、下部のボタンやチームロゴが見切れたりしていた問題を根本的に解消(1366×768の小さいウィンドウでも崩れないことを確認済み)
+- 進捗ステータス表示(「試合開始を待っています」等)を、セットタイマーの上の小さな文字から、画面上部のヘッダー帯の中央(ブランド表示と「前半」バッジの間)に移動し、フォントサイズも拡大(24px)
+- 進捗ステータスの表示場所が空いた分、セットタイマーのリングと数字をさらに拡大(リング620px→700px、数字190px→225px)
+
+## v2.1 (2026-10-21)
+- 23〜27インチモニタでの表示を想定し、ゲームタイマー・セットタイマー(リング)・チームスコアの表示サイズを拡大
+- セットタイマーのリングを拡大した際にスコアカードと重なっていた問題を修正(リングを収める枠の幅を実サイズに合わせて拡張)
+- 画面上部の「ゲームタイム」ラベル表記を削除(タイマー数字のみ表示)
+- チームスコアの数字に、ゲームタイムと同系色の薄い黄色の縁取りを追加し視認性を改善
+
+## v2.0 (2026-09-18)
+- 下部にあった4つのボタン(セット履歴を見る/直前の判定を取り消す/後半へ進む/試合をリセット)をヘッダー右上のハンバーガーメニュー(☰)にまとめ、画面下部を廃止
+- 空いた領域を使い、タイマー表示エリアを画面全体に拡大
+- 「後半へ進む」の独立ボタンを廃止。前半終了時は「前半終了」ボタンをそのまま押すと「後半へ進む」に変化し、もう一度押すと確認の上で後半に進む2段階操作に変更
+
+## v1.9 (2026-08-15)
+- チームロゴ画像のアップロードを追加(任意設定、設定画面でチームごとに画像を選択可能)
+- ロゴ画像はスコアカードとは独立した枠として、カードの外側(中央から遠い側)に同じ高さで表示
+- ロゴを設定しなかったチームは、これまで通りスコアカードのみの表示のまま
+
+## v1.8 (2026-08-15)
+- チームスコア(左右パネル)の間隔を広げ、中央のセットタイマーとの余白を確保
+- ゲームタイマーの表示サイズを一回り縮小
+- セットタイマー(リング表示)の表示サイズを一回り拡大
+
+## v1.7 (2026-08-15)
+- 画面左上のタイトルを「Dodgeball Timer」に変更
+- ゲームタイマーの表示サイズを一回り縮小(iPadで下部のボタンが見切れる問題に対応)
+- 「直前の判定を取り消す」ボタンを追加。WIN/引き分けボタンの誤操作に気付いた場合、スコア・履歴を1件分元に戻し、そのセットの判定をやり直せるように
+
+## v1.6 (2026-08-15)
+- 「Aチーム全滅」「Bチーム全滅」ボタンを、それぞれ「WIN」ボタンに変更
+- WINボタンを押すと、そのまま押した側のチームに得点が入るよう修正(以前は逆側に加点する分かりにくい仕様だった)
+
+## v1.5 (2026-08-15)
+- ゲームタイム・セットタイムの表示をさらに拡大
+- セットタイム終了時、自動で引き分けにせず「判定待ち」状態にして停止するよう修正
+- 「全滅」「引き分け」いずれかのボタンを押してスコアを確定するまで、次のセットに進めないよう修正
+- 最終セットの判定基準を修正(そのセットが「最終セット」と判定された場合、決着後は残り時間に関わらず前半/試合を終了)
+- 引き分けボタンをリンク表示から通常ボタンの見た目に変更
+
+## v1.4
+- セット履歴をメイン画面から別モーダル画面に分離(「セット履歴を見る」ボタンで表示)
+- ゲームタイム・セットタイムの表示を拡大
+- ゲームタイムは「セットが進行している間だけ」進むよう修正(前半/後半スタート直後は進まない)
+
+## v1.3
+- ゲームタイマーをヘッダー右上の小表示から、画面上部中央の大表示に変更
+
+## v1.2
+- 「Aチーム全滅」「Bチーム全滅」ボタン押下時の得点付与ロジックを修正(全滅した側ではなく、生き残った相手チームに加点)
+
+## v1.1
+- 「前後半に分ける / 分けない(1ゲーム完結)」を設定画面で選べるように追加
+
+## v1.0
+- 初版リリース
+- ゲームタイム(前後半)とセットタイムの二重管理
+- 最終セット短縮ルール(残りゲームタイムが閾値未満なら短縮したセット時間で実施)
+- 全滅ボタン・引き分けによるスコア加算、セット履歴の記録
+- 前半→後半の移行、一時停止機能
+</script>
 <!-- History overlay -->
 <div class="overlay" id="history-overlay">
   <div class="overlay-card wide">
@@ -1251,6 +1524,42 @@
   }
   function buzzHalfEnd(){ beep(200,700,"sawtooth",0.22); }
   function clickTone(){ beep(660,90,"sine",0.18); }
+
+  // ---------- アップデート履歴(CHANGELOGを埋め込み、開いたときだけ描画) ----------
+  (function(){
+    const src = document.getElementById("changelog-src").textContent;
+    const vers = [];
+    let cur = null;
+    src.split("\n").forEach(line=>{
+      const h = line.match(/^##\s+(v[\d.]+)\s*(?:\(([^)]*)\))?/);
+      if(h){ cur = { ver:h[1], date:h[2]||"", items:[], notes:[] }; vers.push(cur); return; }
+      if(!cur) return;
+      if(/^\s*-\s+/.test(line)) cur.items.push(line.replace(/^\s*-\s+/,""));
+      else if(/^※/.test(line.trim())) cur.notes.push(line.trim());
+    });
+    const latest = vers.length ? vers[0].ver : "";
+    document.getElementById("cl-ver-tag").textContent = latest;
+    const esc = t => t.replace(/[&<>]/g, c=>({"&":"&amp;","<":"&lt;",">":"&gt;"}[c]));
+    function itemHtml(t){
+      let h = esc(t);
+      h = h.replace(/^【([^】]+)】/, (m,k)=>{
+        const cls = /新機能/.test(k) ? "new" : (/修正|不具合/.test(k) ? "fix" : "chg");
+        return '<span class="cl-tag '+cls+'">'+k+'</span>';
+      });
+      return h;
+    }
+    let built = false;
+    function build(){
+      if(built) return; built = true;
+      const list = document.getElementById("cl-list");
+      list.innerHTML = vers.map((v,i)=>
+        '<details class="cl-ver"'+(i===0?' open':'')+'><summary>'+v.ver+(i===0?' <span class="cl-new">最新</span>':'')+'<span class="cl-date">'+esc(v.date)+'</span></summary>'
+        + v.notes.map(n=>'<p class="cl-note">'+esc(n)+'</p>').join("")
+        + '<ul>'+v.items.map(t=>'<li>'+itemHtml(t)+'</li>').join("")+'</ul></details>').join("");
+    }
+    document.getElementById("cl-open-btn").addEventListener("click", ()=>{ build(); document.getElementById("cl-overlay").classList.add("active"); });
+    document.getElementById("cl-close-btn").addEventListener("click", ()=> document.getElementById("cl-overlay").classList.remove("active"));
+  })();
 
   // ---------- サウンドテスト(音だけ鳴らす。タイマーには一切触れない) ----------
   const st = { gains:[], timers:[], playing:false };
@@ -1545,7 +1854,9 @@
     const isFinal = base.isFinal;
     const duration = (state.setOverrideMs!=null) ? state.setOverrideMs : base.duration;
     // READY中だけ、次のセットの時間も併記する(例: SET 2 (3:00))
-    const text = setLabelName(isFinal, state.setNumber+1) + "  (" + fmt(duration) + ")";
+    // 全体タイマーなし: セット数は上の土台に出るので、下は次のセットの時間だけ
+    const text = (!state.useGameClock && state.phase==="normal") ? "次のセット  " + fmt(duration)
+      : setLabelName(isFinal, state.setNumber+1) + "  (" + fmt(duration) + ")";
     const cls = "topbar-status" + (isFinal ? " final" : "");
     const disp = document.getElementById("set-time-display");
     if(disp.textContent !== fmt(duration)) disp.textContent = fmt(duration);
@@ -1621,7 +1932,7 @@
     document.getElementById("start-set-btn").textContent = "セット開始";
     document.getElementById("start-set-btn").disabled = false;
     document.getElementById("set-label").textContent = "セット待機中";
-    document.getElementById("pause-btn").textContent = "一時停止";
+    document.getElementById("pause-btn").textContent = "❚❚ 一時停止";
     document.getElementById("pause-btn").classList.remove("resume");
     document.getElementById("pause-btn").disabled = false;
     if(state.seamlessClock && state.useGameClock){ setGameTicking(true); }
@@ -1648,7 +1959,7 @@
     if(state.phase==="normal" && state.useGameClock) setGameTicking(true); // セットが始まったら必ずゲームタイムも進む(非シームレス設定の場合はここで再開)
 
     const label = document.getElementById("set-label");
-    label.textContent = setLabelName(isFinal, state.setNumber); // セット中は時間を併記しない(時間は大きな数字で分かる)
+    label.textContent = (!state.useGameClock && state.phase==="normal") ? "" : setLabelName(isFinal, state.setNumber); // セット中は時間を併記しない(全体タイマーなしは土台にセット数があるので空)
     label.classList.toggle("final", isFinal);
 
     document.getElementById("start-set-btn").textContent = "セット進行中";
@@ -1872,8 +2183,11 @@
   }
 
   function renderScores(){
-    document.getElementById("score-a").textContent = state.scoreA;
-    document.getElementById("score-b").textContent = state.scoreB;
+    const a = document.getElementById("score-a"), b = document.getElementById("score-b");
+    a.textContent = state.scoreA; b.textContent = state.scoreB;
+    // 2桁になったら枠に収まる大きさに
+    a.classList.toggle("two", String(state.scoreA).length > 1);
+    b.classList.toggle("two", String(state.scoreB).length > 1);
   }
 
   // セット履歴は常に編集可能。各行のプルダウンで結果を選び直すと、
@@ -1991,7 +2305,7 @@
     draw.textContent = "DRAW"; draw.disabled = true;
     ["btn-a-win","btn-b-win","btn-a-perfect","btn-b-perfect"].forEach(id=> document.getElementById(id).disabled = true);
     const pb = document.getElementById("pause-btn");
-    pb.textContent = "一時停止"; pb.classList.remove("resume"); pb.disabled = true;
+    pb.textContent = "❚❚ 一時停止"; pb.classList.remove("resume"); pb.disabled = true;
   }
   document.getElementById("reset-btn").addEventListener("click", ()=>{
     closeMenu();
@@ -2036,7 +2350,7 @@
     state.setRemainingMs = state.setTotalMs;
     state.lastCountdownSec = null;
     cancelScheduledSounds();
-    const labelText = setLabelName(state.setIsFinal, state.setNumber);
+    const labelText = (!state.useGameClock && state.phase==="normal") ? "" : setLabelName(state.setIsFinal, state.setNumber);
     const labelClass = "topbar-status" + (state.setIsFinal ? " final" : "");
     if(state.awaitingDecision){
       state.awaitingDecision = false;
@@ -2127,7 +2441,7 @@
       if(state.suspendedWasDeath){ state.deathStartAt = now; state.deathTicking = true; }
       label.textContent = state.statusTextBeforeSuspend;
       label.className = state.statusClassBeforeSuspend;
-      btn.textContent = "一時停止";
+      btn.textContent = "❚❚ 一時停止";
       btn.classList.remove("resume");
       document.getElementById("pause-veil").classList.remove("active");
     }
@@ -2199,7 +2513,7 @@
     ctr.classList.toggle("suspended", live && state.suspended);
     document.getElementById("pause-btn").classList.toggle("hide", live || state.matchFinished || state.halfFinished || !(state.gameTicking || state.suspended));
     if(live){
-      const t = state.suspended ? "▶ 再開" : "一時停止";
+      const t = state.suspended ? "▶ 再開" : "❚❚ 一時停止";
       if(sb.textContent !== t) sb.textContent = t;
       sb.disabled = false;
       sb.classList.toggle("resume-mode", state.suspended);
@@ -2208,7 +2522,7 @@
     } else if(sb.classList.contains("pause-mode") || sb.classList.contains("resume-mode")){
       // セットが時間切れで止まった直後など: 元の「セット進行中」表示に戻す(判定後は各処理が上書き)
       sb.classList.remove("pause-mode","resume-mode");
-      if(sb.textContent==="一時停止" || sb.textContent==="▶ 再開"){ sb.textContent = state.phase==="death" ? "決着まで続行" : "セット進行中"; sb.disabled = true; }
+      if(sb.textContent==="❚❚ 一時停止" || sb.textContent==="▶ 再開"){ sb.textContent = state.phase==="death" ? "決着まで続行" : "セット進行中"; sb.disabled = true; }
     }
   }
 
@@ -2224,6 +2538,9 @@
     document.getElementById("court-change-btn").disabled = (state.running || state.gameTicking || state.deathTicking);
     syncPauseButtons();
     syncCrossArrows();
+    // 円のインジケーターがない分、カウント中の残り10秒以下は数字を赤に
+    document.getElementById("set-time-display").classList.toggle("danger", state.running && state.setRemainingMs<=10000 && state.phase!=="death");
+    { const st=document.getElementById("set-time-display"); st.classList.toggle("wide", !st.classList.contains("long") && fmt(Math.max(state.setRemainingMs,0)).length>4 && (state.running||state.setActive||state.setReady)); }
     if(state.setReady && !state.setActive){ renderPreparedSet(); }
     const adjOn = state.setReady && !state.setActive && state.phase!=="death";
     ["set-minus","set-plus"].forEach(id=> document.getElementById(id).classList.toggle("show", adjOn));
