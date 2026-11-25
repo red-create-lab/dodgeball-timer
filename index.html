@@ -604,6 +604,16 @@
   #start-set-btn.pause-mode:hover{background:#FFB84D;}
   #pause-btn.pause-pill:not(.resume):not(:disabled){background:#F2A93B;border-color:#F2A93B;color:#1A1206;font-weight:900;}
   #game-clock-display.set-count{font-weight:800;font-size:150px;padding:20px 0 14px;} /* 全体タイマーなし: 土台のセット数を太字に */
+
+  /* スコアカードはセットタイマーと横並びにならないよう下寄せ(ロゴは上のまま) */
+  #stage .board{align-items:stretch;}
+  #stage .team-side{justify-content:flex-start;padding-bottom:4px;}
+  #stage .team-side .team-panel{margin-top:auto;}
+  #stage .stage-credit{left:50%;right:auto;transform:translateX(-50%);bottom:6px;font-size:15px;}
+  /* 一時停止中: ▲▼とPAUSEが重ならないよう数字を少し小さく */
+  #stage.c-setting .set-time{font-size:500px;}
+  #stage.c-setting .pause-veil{padding-top:248px !important;}
+  #stage.c-setting .pause-text{font-size:92px !important;}
   /* 全体タイマーは帯の上に載せた土台(カプセル)に表示。帯は細いまま */
   .game-clock-hero{top:14px;background:var(--bg-panel);border:3px solid var(--gold);border-radius:999px;
     padding:4px 46px 10px;box-shadow:0 10px 28px rgba(0,0,0,.45);}
@@ -1135,6 +1145,12 @@
   </div>
 </div>
 <script type="text/plain" id="changelog-src"># 変更履歴 (クロスドッジボール タイマー)
+
+## v4.11 (2026-11-25)
+※ クロスドッジボールモードのみの変更
+- 【表示変更】左右のスコアカード(チーム名・スコア・WIN)を画面の下端に寄せた。スコアとセットタイマーが横並びに見えて見間違えないように(ロゴは上のまま)
+- 「Produced by RED Create Lab」の表記を下の中央に移動
+- 【不具合修正】一時停止中、中央の▲(10秒)ボタンが「PAUSE」の文字に重なって見えにくかった問題を修正(一時停止中はセットタイマーを少し小さく表示)
 
 ## v4.10 (2026-11-25)
 - 【新機能】モード選択画面に「📖 操作マニュアル」ボタンを追加。押すと操作マニュアル(manual.html)を新しいタブで開く。タイマーと同じ場所に manual.html を置いて使う
