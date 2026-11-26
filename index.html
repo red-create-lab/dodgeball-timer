@@ -504,6 +504,9 @@
   #d-veil{justify-content:flex-start;padding-top:150px;}
   #d-veil .pause-text{font-size:150px;}
   #d-veil .pause-sub{display:none;}
+  /* 複数セット: 上部のSETカプセルと重ならないよう、PAUSEはカプセルの下に小さめに */
+  #d-stage:not(.single) #d-veil{padding-top:200px;}
+  #d-stage:not(.single) #d-veil .pause-text{font-size:70px;line-height:1;letter-spacing:.08em;}
   .d-body.paused .d-time{z-index:41;}
   .d-body.paused .d-arrows .d-arrow{z-index:42;}
   /* 1セットの一時停止中は「▶ 再開」と「この試合を終了」を横並びにして、▼と重ならないようにする */
@@ -615,9 +618,17 @@
   #stage.c-setting .pause-veil{padding-top:248px !important;}
   #stage.c-setting .pause-text{font-size:92px !important;}
   /* 全体タイマーは帯の上に載せた土台(カプセル)に表示。帯は細いまま */
-  .game-clock-hero{top:14px;background:var(--bg-panel);border:3px solid var(--gold);border-radius:999px;
+  #stage .game-clock-hero{top:14px;background:var(--bg-panel);border:3px solid var(--gold);border-radius:999px;
     padding:4px 46px 10px;box-shadow:0 10px 28px rgba(0,0,0,.45);}
-  .game-clock-big{font-size:210px;line-height:1;}
+  #stage .game-clock-big{font-size:210px;line-height:1;}
+  #stage .game-clock-big.sd-text{font-size:64px;}
+  /* ドッジボールモード(複数セット)も、セット数を帯の上の土台に表示。1セットのときは土台を出さない */
+  #d-stage .game-clock-hero{top:14px;background:var(--bg-panel);border:3px solid var(--gold);border-radius:999px;
+    padding:4px 46px 10px;box-shadow:0 10px 28px rgba(0,0,0,.45);}
+  #d-stage #d-hero{font-size:124px;font-weight:800;line-height:1;padding:14px 0 8px;}
+  /* 複数セット: 状況表示(判定を選んでください等)をSETの土台の下に */
+  #d-stage:not(.single) .d-label{top:78px;}
+  #d-stage.single .game-clock-hero{display:none;} /* TIE BREAK / SUDDEN DEATH / GAME SET の文字は従来の大きさ */
   .ring-box{top:44px;} /* セットタイマー〜ボタンをまとめて下へ */
   .adj-btn.game-adj{height:60px;}
   .ring-box .topbar-status{bottom:calc(50% + var(--F) * .40 - 4px);}
@@ -1145,6 +1156,11 @@
   </div>
 </div>
 <script type="text/plain" id="changelog-src"># 変更履歴 (クロスドッジボール タイマー)
+
+## v4.12 (2026-11-26)
+- 【不具合修正】クロスドッジボールモード: Windowsなど数字が縦に大きく表示されるフォント環境で、セットタイマーの数字とSET表示・▲▼ボタン・下のボタンが重なっていた問題を修正(実際の文字の大きさを測って配置するようにした)
+- 【不具合修正】クロスドッジボールモード: タイブレーク表示の文字が大きくなりすぎる問題を修正
+- 【表示変更】ドッジボールモード(複数セット): クロスドッジボールモードと同じく、ヘッダー帯に載せた金縁の土台に「SET 1」などセット数を表示。一時停止中のPAUSEは土台の下に小さく表示。1セットの場合は土台なし(従来どおり)
 
 ## v4.11 (2026-11-25)
 ※ クロスドッジボールモードのみの変更
@@ -2486,15 +2502,51 @@
     el.classList.toggle("long", t.length > 4 || pausedDec); // 10:00以上・小数付きは少し小さく
     cPlaceArrows();
   }
+  // ---- 数字の「実際の上端・下端」を測る(パソコンごとにフォントが違っても、表示やボタンが数字に重ならないように) ----
+  const inkCanvas = document.createElement("canvas").getContext("2d");
+  const inkCache = {};
+  function digitInk(el){
+    const cs = getComputedStyle(el);
+    const key = cs.fontWeight+"|"+cs.fontSize+"|"+cs.fontFamily+"|"+cs.lineHeight;
+    let m = inkCache[key];
+    if(!m){
+      inkCanvas.font = cs.fontWeight + " " + cs.fontSize + " " + cs.fontFamily;
+      const t = inkCanvas.measureText("0123456789:");
+      const fa = t.fontBoundingBoxAscent, fd = t.fontBoundingBoxDescent;
+      const lh = cs.lineHeight==="normal" ? fa+fd : parseFloat(cs.lineHeight);
+      m = inkCache[key] = { asc:t.actualBoundingBoxAscent, desc:t.actualBoundingBoxDescent, fa, fd, lh };
+    }
+    // 1行の文字が要素の縦中央に置かれる前提で、ベースライン→インクの上端・下端を出す
+    const lineTop = el.offsetTop + (el.offsetHeight - m.lh)/2;
+    const base = lineTop + (m.lh - (m.fa + m.fd))/2 + m.fa;
+    return { top: base - m.asc, bottom: base + Math.max(m.desc, 0) };
+  }
+  // セット名の表示とボタンを、数字の実際の上端・下端に合わせて置く
+  let inkLast = "";
+  function layoutSetInk(){
+    const el = document.getElementById("set-time-display");
+    const box = el.parentElement; // ring-box
+    if(!el.offsetHeight || getComputedStyle(el).display==="none" || state.phase==="death"){
+      // サドンデス(∞表示)などセットタイマーが出ていないときは、元のCSSの位置に戻す
+      if(inkLast !== "off"){ document.getElementById("set-label").style.bottom = ""; document.querySelector("#stage .set-controls").style.top = ""; inkLast = "off"; }
+      return;
+    }
+    const ink = digitInk(el);
+    const paused = document.getElementById("stage").classList.contains("c-setting"); // 一時停止中は▼の下にボタン
+    const k = Math.round(ink.top)+"|"+Math.round(ink.bottom)+"|"+box.offsetHeight+"|"+paused;
+    if(k === inkLast) return;
+    inkLast = k;
+    document.getElementById("set-label").style.bottom = (box.offsetHeight - ink.top + 8) + "px";
+    document.querySelector("#stage .set-controls").style.top = (ink.bottom + (paused ? 10 + 62 + 12 : 14)) + "px";
+  }
   function cPlaceArrows(){
     const el = document.getElementById("set-time-display");
-    const F = parseFloat(getComputedStyle(el).fontSize);
-    const cy = el.offsetTop + el.offsetHeight/2, half = 0.374*F;
+    const ink = digitInk(el);
     const pos = { m: el.querySelector(".tg-m"), t: el.querySelector(".tg-t"), o: el.querySelector(".tg-o") };
     document.querySelectorAll("#c-arrows .d-arrow").forEach(btn=>{
       const g = pos[btn.dataset.g]; if(!g) return;
       btn.style.left = (el.offsetLeft + g.offsetLeft + g.offsetWidth/2) + "px";
-      btn.style.top = btn.classList.contains("up") ? (cy - half - 62 - 12) + "px" : (cy + half + 10) + "px";
+      btn.style.top = btn.classList.contains("up") ? (ink.top - 62 - 10) + "px" : (ink.bottom + 10) + "px";
     });
   }
   function cAdjust(delta){
@@ -2558,6 +2610,7 @@
     document.getElementById("court-change-btn").disabled = (state.running || state.gameTicking || state.deathTicking);
     syncPauseButtons();
     syncCrossArrows();
+    if(document.getElementById("main-screen").classList.contains("active")) layoutSetInk();
     // 円のインジケーターがない分、カウント中の残り10秒以下は数字を赤に
     document.getElementById("set-time-display").classList.toggle("danger", state.running && state.setRemainingMs<=10000 && state.phase!=="death");
     { const st=document.getElementById("set-time-display"); st.classList.toggle("wide", !st.classList.contains("long") && fmt(Math.max(state.setRemainingMs,0)).length>4 && (state.running||state.setActive||state.setReady)); }
