@@ -632,6 +632,30 @@
   .ring-box{top:44px;} /* セットタイマー〜ボタンをまとめて下へ */
   .adj-btn.game-adj{height:60px;}
   .ring-box .topbar-status{bottom:calc(50% + var(--F) * .40 - 4px);}
+  /* ===== v4.13: ボタンを低くして、タイマーの数字を大きく ===== */
+  #start-set-btn{padding:7px 8px;}
+  #draw-btn{padding:4px 8px;}
+  /* クロス: 横幅はスコア枠で決まるので、スコア枠を少し細くした分だけ数字を大きく */
+  #stage .team-side{width:264px;}
+  #stage .set-timer-wrap{width:calc(1920px - 528px - 72px - 48px);}
+  #stage .ring-box{--F:632px;}
+  #stage .team-score.two{font-size:170px;line-height:1.59;}
+  .d-start{padding:7px 8px;}
+  .d-draw{padding:4px 8px;}
+  .d-time{font-size:840px;top:165px;}
+  #d-stage.single .d-logo{top:12px;height:92px;}
+  #d-stage:not(.single) .d-logo{top:16px;height:120px;} /* 複数セットも数字と重ならないよう少し小さく */ /* 1セット: 大きくなった数字とロゴが重ならないよう、ロゴは小さめに */
+  .d-body.setting .d-time{top:190px;}
+  #d-stage.single .d-label{top:26px;}
+  .d-body.setting.paused .d-time{top:214px;} /* 一時停止中はPAUSEと▲が重ならない位置 */
+  .d-time.long{font-size:650px;}
+  #d-stage:not(.single) .d-time{top:175px;font-size:760px;}
+  #d-stage:not(.single) .d-time.long{font-size:580px;}
+  /* 全体タイマーなし: SETの土台をドッジボールモードと同じ大きさに */
+  #game-clock-display.set-count{font-size:124px;padding:14px 0 8px;}
+  /* 全体タイマーなし: 土台が小さくなった分、「次のセット」とセットタイマーの数字を上へ(ボタンの位置はそのまま) */
+  #stage:not(.c-setting):has(#game-clock-display.set-count) #set-time-display{transform:translateY(-56px);}
+  #stage:not(.c-setting):has(#game-clock-display.set-count) #set-label{transform:translateX(-50%) translateY(-56px);}
 </style>
 </head>
 <body>
@@ -1156,6 +1180,13 @@
   </div>
 </div>
 <script type="text/plain" id="changelog-src"># 変更履歴 (クロスドッジボール タイマー)
+
+## v4.13 (2026-11-26)
+- 【表示変更】両モード: タイマー下のボタン(READY/START・一時停止・DRAWなど)の高さを低くし、その分セットタイマー・タイマーの数字を大きく
+  - クロスドッジボールモード: スコア枠を少し細くして(2桁のスコアは少し小さい文字で枠内に収める)、セットタイマーを大きく
+  - ドッジボールモード: 1セットは数字を大きくして上へ移動(上下の余白をそろえる)。複数セットも少し大きく
+  - ドッジボールモード: 大きくなった数字と重ならないよう、チームロゴを少し小さく
+- 【表示変更】クロスドッジボールモード(全体タイマーなし): 土台の「SET n」をドッジボールモードと同じ大きさに。「次のセット」とセットタイマーの数字を上へ(ボタンの位置はそのまま)
 
 ## v4.12 (2026-11-26)
 - 【不具合修正】クロスドッジボールモード: Windowsなど数字が縦に大きく表示されるフォント環境で、セットタイマーの数字とSET表示・▲▼ボタン・下のボタンが重なっていた問題を修正(実際の文字の大きさを測って配置するようにした)
